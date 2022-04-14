@@ -324,7 +324,7 @@ KerbalSimpit mySimpit(Serial);
 
 int lcdLine2Delay = 100;
 
-String soi = "EXAMPLE";
+String soi = "";
 
 // Analog inputs
 int rotXRaw, rotYRaw, rotZRaw;
@@ -410,16 +410,12 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
             tm = parseMessage<targetMessage>(msg);
             targetVelocity = tm.velocity;
         }
-        /*
     case SOI_MESSAGE:
-        if (msgSize == sizeof(msg))
-        {
-            char soi[];
-                strncpy(soi, msg, msgSize);
-                soi[msgSize] = '\0'
-        }
+            soi = (char *) msg;
+            soi[msgSize] = '\0';
+      
+            mySimpit.printToKSP("I'm orbitting " + soi, PRINT_TO_SCREEN);
         break;
-        */
     }
 }
 
