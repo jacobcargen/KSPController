@@ -322,9 +322,8 @@ KerbalSimpit mySimpit(Serial);
 
 #pragma endregion
 
-int lcdLine2Delay = 100;
+int lcdLine2Delay = 125;
 
-String soi = "";
 
 // Analog inputs
 int rotXRaw, rotYRaw, rotZRaw;
@@ -332,6 +331,8 @@ int rotXRaw, rotYRaw, rotZRaw;
 // Switch states
 bool rotButtonState, stageButtonState = false;
 
+// SOI
+String soi = "";
 // Heading
 int heading;
 // Pitch
@@ -367,7 +368,7 @@ void loop()
         stageButtonState = false;
     }
 
-    delay(100);
+    delay(250);
 }
 
 #pragma region Simpit
@@ -377,45 +378,47 @@ void registerChannels()
     //mySimpit.registerChannel(ALTITUDE_MESSAGE);
     mySimpit.registerChannel(ROTATION_DATA);
     mySimpit.registerChannel(VELOCITY_MESSAGE);
-    //mySimpit.registerChannel(SOI_MESSAGE);
+    mySimpit.registerChannel(SOI_MESSAGE);
 }
 
 void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 {
     switch (messageType)
     {
-    case ROTATION_DATA:
-        if (msgSize == sizeof(vesselPointingMessage))
-        {
-            vesselPointingMessage vpm;
-            vpm = parseMessage<vesselPointingMessage>(msg);
-            heading = vpm.heading;
-            pitch = vpm.pitch;
-            roll = vpm.roll;
-        }
-        break;
-    case VELOCITY_MESSAGE:
-        if (msgSize == sizeof(velocityMessage))
-        {
-            velocityMessage vm;
-            vm = parseMessage<velocityMessage>(msg);
-            surfaceVelocity = vm.surface;
-            orbitalVelocity = vm.orbital;
-            verticalVelocity = vm.vertical;
-        }
-    case TARGETINFO_MESSAGE:
-        if (msgSize == sizeof(targetMessage))
-        {
-            targetMessage tm;
-            tm = parseMessage<targetMessage>(msg);
-            targetVelocity = tm.velocity;
-        }
-    case SOI_MESSAGE:
+        case ROTATION_DATA:
+            if (msgSize == sizeof(vesselPointingMessage))
+            {
+                vesselPointingMessage vpm;
+                vpm = parseMessage<vesselPointingMessage>(msg);
+                heading = vpm.heading;
+                pitch = vpm.pitch;
+                roll = vpm.roll;
+            }
+            break;
+        case VELOCITY_MESSAGE:
+            if (msgSize == sizeof(velocityMessage))
+            {
+                velocityMessage vm;
+                vm = parseMessage<velocityMessage>(msg);
+                surfaceVelocity = vm.surface;
+                orbitalVelocity = vm.orbital;
+                verticalVelocity = vm.vertical;
+            }
+            break;
+        case TARGETINFO_MESSAGE:
+            if (msgSize == sizeof(targetMessage))
+            {
+                targetMessage tm;
+                tm = parseMessage<targetMessage>(msg);
+                targetVelocity = tm.velocity;
+            }
+            break;
+        case SOI_MESSAGE:
             soi = (char *) msg;
             soi[msgSize] = '\0';
-      
+
             mySimpit.printToKSP("I'm orbitting " + soi, PRINT_TO_SCREEN);
-        break;
+            break;
     }
 }
 
