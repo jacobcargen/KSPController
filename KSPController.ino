@@ -444,12 +444,8 @@ void updateHeadingLCD()
     // SOI txt
     topTxt += soi;
     // Calculate gap
-    int idealLength = 7;
-    int gap = idealLength - soi.length();
-    for (size_t i = 0; i < gap; i++)
-    {
-        topTxt += " ";
-    }
+    // No SOI names are more than 7 char, which is good because that is the esact amount of room at max on the lcd.
+    calculateGap(soi, 7);
     // Heading txt
     topTxt += " HDG+";
     topTxt += formatNumber(heading, 3, false, false);
@@ -498,6 +494,7 @@ void updateSpeedLCD()
     speedLCD.print(botTxt);
 }
 */
+
 /// <summary>
 /// Format numbers for LCD
 /// </summary>
@@ -529,4 +526,22 @@ String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNeg
     }
 
     return str + (String)num;
+}
+
+/// <summary>
+/// Calculate a gap. Do keep in mind that the included text cannot be more than the ideal length, 
+/// if so it will not work correctly.
+/// </summary>
+/// <param name="includedTxt"></param>
+/// <param name="idealLength"></param>
+/// <returns></returns>
+String calculateGap(String includedTxt, int idealLength)
+{
+    // Calculate gap
+    int gap = idealLength - includedTxt.length();
+    String str;
+    for (size_t i = 0; i < gap; i++)
+    {
+        str += " ";
+    }
 }
