@@ -416,8 +416,6 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
         case SOI_MESSAGE:
             soi = (char *) msg;
             soi[msgSize] = '\0';
-
-            mySimpit.printToKSP("I'm orbitting " + soi, PRINT_TO_SCREEN);
             break;
     }
 }
@@ -443,8 +441,15 @@ void updateController()
 void updateHeadingLCD()
 {
     String topTxt, botTxt;
+    // SOI txt
     topTxt += soi;
-
+    // Calculate gap
+    int idealLength = 7;
+    int gap = idealLength - soi.length();
+    for (size_t i = 0; i < gap; i++)
+    {
+        topTxt += " ";
+    }
     // Heading txt
     topTxt += " HDG+";
     topTxt += formatNumber(heading, 3, false, false);
