@@ -116,36 +116,44 @@ const char degreeChar = 223;
 //const int CYCLE_CAMERA_MODE_BUTTON;
 //const int RESET_CAMERA_BUTTON;
 
-#pragma region Analog
+#pragma region AnalogPins
 
 // Rotation Joystick X-Axis(Roll)
-const int ROTATION_X_AXIS = A0;
+const int ROTATION_X_AXIS_PIN = A0;
 // Rotation Joystick Y-Axis(Pitch)
-const int ROTATION_Y_AXIS = A1;
+const int ROTATION_Y_AXIS_PIN = A1;
 // Rotation Joystick Z-Axis(Yaw)
-const int ROTATION_Z_AXIS = A2;
+const int ROTATION_Z_AXIS_PIN = A2;
 // Rotation Joystick Button
-const int ROTATION_BUTTON = A3;
+const int ROTATION_BUTTON_PIN = A3;
 
 // Translation Joystick X-Axis(Left/Right)
-const int TRANSLATION_X_AXIS = A4;
+const int TRANSLATION_X_AXIS_PIN = A4;
 // Translation Joystick Y-Axis(Forward/Back)
-const int TRANSLATION_Y_AXIS = A5;
+const int TRANSLATION_Y_AXIS_PIN = A5;
 // Translation Joystick Z-Axis(Up/Down)
-const int TRANSLATION_Z_AXIS = A6;
+const int TRANSLATION_Z_AXIS_PIN = A6;
 // Translation Joystick ButtonTRAN
-const int TRANSLATION_BUTTON = A7;
+const int TRANSLATION_BUTTON_PIN = A7;
 
 // Throttle Axis
-const int THROTTLE_AXIS = A8;
+const int THROTTLE_AXIS_PIN = A8;
 
 #pragma endregion
+
+// Joystick analog
+int rotXRaw, rotYRaw, rotZRaw;
+int transXRaw, transYRaw, transZRaw;
+// Joystick buttons
+bool rotButtonState, transButtonState;
+
+bool stageButtonState = false;
 
 #pragma endregion
 
 #pragma region Output
 
-// Shift out
+// Shift out A pins
 const int SHIFT_OUT_A_DATA_PIN = 8;
 const int SHIFT_OUT_A_LATCH_PIN = 9;
 const int SHIFT_OUT_A_CLOCK_PIN = 10;
@@ -224,14 +232,6 @@ LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 
 // Warping & Time Control
 //const int WARP_LOCK_LED;
 
-#pragma endregion
-
-#pragma region Simpit
-
-KerbalSimpit mySimpit(Serial);
-
-#pragma endregion
-
 #pragma region KspInfo
 
 // SOI
@@ -250,15 +250,18 @@ int targetVelocity;
 
 #pragma endregion
 
+#pragma endregion
 
-int lcdLine2Delay = 0;
+#pragma region Simpit
+
+KerbalSimpit mySimpit(Serial);
+
+#pragma endregion
 
 
-// Analog inputs
-int rotXRaw, rotYRaw, rotZRaw;
 
-// Switch states
-bool rotButtonState, stageButtonState = false;
+// Time between the top and bottom of the lcd prints
+int lcdLineDelay = 0;
 
 
 #pragma region Methods
@@ -286,18 +289,32 @@ void initIO()
 
 }
 
-/// <summary>Records every analog input on the controller.</summary>
-void recordAnalogInputs()
+/// <summary>Records every input on the controller.</summary>
+void recordInputs()
 {
-    // Get the raw axis values
-    rotXRaw = analogRead(ROTATION_X_AXIS);
-    rotYRaw = analogRead(ROTATION_Y_AXIS);
-    rotZRaw = analogRead(ROTATION_Z_AXIS);
-    // Checks if the button is pressed and sets the result
-    rotButtonState = analogRead(ROTATION_BUTTON) > 50 ? true : false;
-}
 
-// Will I need a record input method??
+    #pragma region Analog
+
+    // Get the raw axis values
+    rotXRaw = analogRead(ROTATION_X_AXIS_PIN);
+    rotYRaw = analogRead(ROTATION_Y_AXIS_PIN);
+    rotZRaw = analogRead(ROTATION_Z_AXIS_PIN);
+    transXRaw = analogRead(TRANSLATION_X_AXIS_PIN);
+    transYRaw = analogRead(TRANSLATION_Y_AXIS_PIN);
+    transZRaw = analogRead(TRANSLATION_Z_AXIS_PIN);
+    // If button less then 50, then set to true, otherwise set false;
+    rotButtonState = analogRead(ROTATION_BUTTON_PIN) > 50 ? false : true;
+    transButtonState = analogRead(TRANSLATION_BUTTON_PIN) > 50 ? false : true;
+
+    #pragma endregion
+
+    #pragma region Digital
+
+
+
+    #pragma endregion
+
+}
 
 /// <summary>Updates every output on the controller.</summary>
 void updateController()
@@ -388,7 +405,7 @@ void updateHeadingLCD()
     // Clear LCD
     headingLCD.clear();
     // Delay
-    delay(lcdLine2Delay);
+    delay(lcdLineDelay);
     // Print to bottom line
     headingLCD.setCursor(0, 1);
     headingLCD.print(botTxt);
@@ -428,6 +445,40 @@ void updateSpeedLCD()
 
 #pragma region ShiftOut
 
+void updateShiftOut(unsigned long pins, char reg)//, BitOrder order = MSBFIRST)
+{
+    int data, latch, clock;
+
+    switch (reg)
+    {
+        case 'A':
+            data = SHIFT_OUT_A_DATA_PIN;
+            latch = SHIFT_OUT_A_LATCH_PIN;
+            clock = SHIFT_OUT_A_CLOCK_PIN;
+            break;
+        //case 'B':
+            //break;
+        default:
+            return;
+    }
+
+    unsigned int leds16 = int(pins);
+    unsigned int leds32 = int(pins >> 16);
+    byte low16LED = lowByte(leds16);
+    byte high16LED = highByte(leds16);
+    byte low32LED = lowByte(leds32);
+    byte high32LED = highByte(leds32);
+
+    // Disable
+    digitalWrite(latch, LOW);
+    shiftOut(data, clock, MSBFIRST, high32LED);
+    shiftOut(data, clock, MSBFIRST, low32LED);
+    shiftOut(data, clock, MSBFIRST, high16LED);
+    shiftOut(data, clock, MSBFIRST, low16LED);
+    // Enable
+    digitalWrite(latch, HIGH);
+}
+
 void shiftOutA()
 {
     // Define the output
@@ -466,40 +517,6 @@ void shiftOutA()
     }
     // Update the changes
     updateShiftOut(output, 'A');
-}
-
-void updateShiftOut(unsigned long pins, char reg, BitOrder order = MSBFIRST)
-{
-    int data, latch, clock;
-
-    switch (reg)
-    {
-    case 'A':
-        data = SHIFT_OUT_A_DATA_PIN;
-        latch = SHIFT_OUT_A_LATCH_PIN;
-        clock = SHIFT_OUT_A_CLOCK_PIN;
-        break;
-        //case 'B':
-            //break;
-    default:
-        return;
-    }
-
-    unsigned int leds16 = int(pins);
-    unsigned int leds32 = int(pins >> 16);
-    byte low16LED = lowByte(leds16);
-    byte high16LED = highByte(leds16);
-    byte low32LED = lowByte(leds32);
-    byte high32LED = highByte(leds32);
-
-    // Disable
-    digitalWrite(latch, LOW);
-    shiftOut(data, clock, order, high32LED);
-    shiftOut(data, clock, order, low32LED);
-    shiftOut(data, clock, order, high16LED);
-    shiftOut(data, clock, order, low16LED);
-    // Enable
-    digitalWrite(latch, HIGH);
 }
 
 #pragma endregion
@@ -561,17 +578,28 @@ String calculateGap(String includedTxt, int idealLength)
 
 void setup()
 {
+    // Initialize the i/o
     initIO();
-
+    // Open up the serial port
     Serial.begin(115200);
-    while (!mySimpit.init());
+    // Wait for a connection to ksp
+    //while (!mySimpit.init());
+    // Register a method for receiving simpit messages from ksp
     mySimpit.inboundHandler(myCallbackHandler);
+    // Register the simpit channels
     registerChannels();
 }
 
 void loop()
 {
+    // Update simpit
     mySimpit.update();
-    recordAnalogInputs();
+    // Record analog inputs
+    recordInputs();
+    // Update the controllers outputs
     updateController();
+
+    Serial.print("X:" + rotXRaw);
+
+    delay(100);
 }
