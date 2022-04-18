@@ -267,7 +267,7 @@ int lcdLineDelay = 0;
 #pragma region Methods
 
 ///<summary> Initialize the inputs and outputs.</summary>
-void initIO()
+void initIO()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 {
 
     #pragma region Inputs
@@ -599,7 +599,7 @@ void loop()
     // Update the controllers outputs
     updateController();
 
-    Serial.print("X:" + rotXRaw);
+    Serial.print("");//"X:" + rotXRaw);
 
     delay(100);
 }
