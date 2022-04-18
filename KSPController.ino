@@ -145,6 +145,11 @@ const int THROTTLE_AXIS = A8;
 
 #pragma region Output
 
+// Shift out
+const int SHIFT_OUT_A_DATA_PIN = 8;
+const int SHIFT_OUT_A_LATCH_PIN = 9;
+const int SHIFT_OUT_A_CLOCK_PIN = 10;
+
 //const int POWER_LED;
 // Warings
 //const int GEE_WARN_LED;
@@ -161,110 +166,15 @@ const int THROTTLE_AXIS = A8;
 #pragma region LED_BARS
 
 // SF
-//const int SF_A_1_LED;
-//const int SF_A_2_LED;
-//const int SF_A_3_LED;
-//const int SF_A_4_LED;
-//const int SF_A_5_LED;
-//const int SF_A_6_LED;
-//const int SF_A_7_LED;
-//const int SF_A_8_LED;
-//const int SF_A_9_LED;
-//const int SF_A_10_LED;
-//const int SF_B_1_LED;
-//const int SF_B_2_LED;
-//const int SF_B_3_LED;
-//const int SF_B_4_LED;
-//const int SF_B_5_LED;
-//const int SF_B_6_LED;
-//const int SF_B_7_LED;
-//const int SF_B_8_LED;
-//const int SF_B_9_LED;
-//const int SF_B_10_LED;
+bool sfLeds[20];
 // LF
-//const int LF_A_1_LED;
-//const int LF_A_2_LED;
-//const int LF_A_3_LED;
-//const int LF_A_4_LED;
-//const int LF_A_5_LED;
-//const int LF_A_6_LED;
-//const int LF_A_7_LED;
-//const int LF_A_8_LED;
-//const int LF_A_9_LED;
-//const int LF_A_10_LED;
-//const int LF_B_1_LED;
-//const int LF_B_2_LED;
-//const int LF_B_3_LED;
-//const int LF_B_4_LED;
-//const int LF_B_5_LED;
-//const int LF_B_6_LED;
-//const int LF_B_7_LED;
-//const int LF_B_8_LED;
-//const int LF_B_9_LED;
-//const int LF_B_10_LED;
+bool lfLeds[20];
 // OX
-//const int OX_A_1_LED;
-//const int OX_A_2_LED;
-//const int OX_A_3_LED;
-//const int OX_A_4_LED;
-//const int OX_A_5_LED;
-//const int OX_A_6_LED;
-//const int OX_A_7_LED;
-//const int OX_A_8_LED;
-//const int OX_A_9_LED;
-//const int OX_A_10_LED;
-//const int OX_B_1_LED;
-//const int OX_B_2_LED;
-//const int OX_B_3_LED;
-//const int OX_B_4_LED;
-//const int OX_B_5_LED;
-//const int OX_B_6_LED;
-//const int OX_B_7_LED;
-//const int OX_B_8_LED;
-//const int OX_B_9_LED;
-//const int OX_B_10_LED;
+bool oxLeds[20];
 // MP
-//const int MP_A_1_LED;
-//const int MP_A_2_LED;
-//const int MP_A_3_LED;
-//const int MP_A_4_LED;
-//const int MP_A_5_LED;
-//const int MP_A_6_LED;
-//const int MP_A_7_LED;
-//const int MP_A_8_LED;
-//const int MP_A_9_LED;
-//const int MP_A_10_LED;
-//const int MP_B_1_LED;
-//const int MP_B_2_LED;
-//const int MP_B_3_LED;
-//const int MP_B_4_LED;
-//const int MP_B_5_LED;
-//const int MP_B_6_LED;
-//const int MP_B_7_LED;
-//const int MP_B_8_LED;
-//const int MP_B_9_LED;
-//const int MP_B_10_LED;
+bool mpLeds[20];
 // EC
-//const int EC_A_1_LED;
-//const int EC_A_2_LED;
-//const int EC_A_3_LED;
-//const int EC_A_4_LED;
-//const int EC_A_5_LED;
-//const int EC_A_6_LED;
-//const int EC_A_7_LED;
-//const int EC_A_8_LED;
-//const int EC_A_9_LED;
-//const int EC_A_10_LED;
-//const int EC_B_1_LED;
-//const int EC_B_2_LED;
-//const int EC_B_3_LED;
-//const int EC_B_4_LED;
-//const int EC_B_5_LED;
-//const int EC_B_6_LED;
-//const int EC_B_7_LED;
-//const int EC_B_8_LED;
-//const int EC_B_9_LED;
-//const int EC_B_10_LED;
+bool ecLeds[20];
 
 #pragma endregion
 
@@ -322,14 +232,7 @@ KerbalSimpit mySimpit(Serial);
 
 #pragma endregion
 
-int lcdLine2Delay = 125;
-
-
-// Analog inputs
-int rotXRaw, rotYRaw, rotZRaw;
-
-// Switch states
-bool rotButtonState, stageButtonState = false;
+#pragma region KspInfo
 
 // SOI
 String soi = "";
@@ -345,84 +248,46 @@ int orbitalVelocity;
 int verticalVelocity;
 int targetVelocity;
 
-void setup()
-{
-    // initialize the LCD
-    headingLCD.begin();
-
-    Serial.begin(115200);
-    while (!mySimpit.init());
-    mySimpit.inboundHandler(myCallbackHandler);
-    registerChannels();
-}
-
-void loop()
-{
-    mySimpit.update();
-    recordInputs();
-    updateController();
-
-    if (stageButtonState)
-    {
-        mySimpit.activateAction(STAGE_ACTION);
-        stageButtonState = false;
-    }
-
-    delay(250);
-}
-
-#pragma region Simpit
-
-void registerChannels()
-{
-    //mySimpit.registerChannel(ALTITUDE_MESSAGE);
-    mySimpit.registerChannel(ROTATION_DATA);
-    mySimpit.registerChannel(VELOCITY_MESSAGE);
-    mySimpit.registerChannel(SOI_MESSAGE);
-}
-
-void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
-{
-    switch (messageType)
-    {
-        case ROTATION_DATA:
-            if (msgSize == sizeof(vesselPointingMessage))
-            {
-                vesselPointingMessage vpm;
-                vpm = parseMessage<vesselPointingMessage>(msg);
-                heading = vpm.heading;
-                pitch = vpm.pitch;
-                roll = vpm.roll;
-            }
-            break;
-        case VELOCITY_MESSAGE:
-            if (msgSize == sizeof(velocityMessage))
-            {
-                velocityMessage vm;
-                vm = parseMessage<velocityMessage>(msg);
-                surfaceVelocity = vm.surface;
-                orbitalVelocity = vm.orbital;
-                verticalVelocity = vm.vertical;
-            }
-            break;
-        case TARGETINFO_MESSAGE:
-            if (msgSize == sizeof(targetMessage))
-            {
-                targetMessage tm;
-                tm = parseMessage<targetMessage>(msg);
-                targetVelocity = tm.velocity;
-            }
-            break;
-        case SOI_MESSAGE:
-            soi = (char *) msg;
-            soi[msgSize] = '\0';
-            break;
-    }
-}
-
 #pragma endregion
 
-void recordInputs()
+
+int lcdLine2Delay = 0;
+
+
+// Analog inputs
+int rotXRaw, rotYRaw, rotZRaw;
+
+// Switch states
+bool rotButtonState, stageButtonState = false;
+
+
+#pragma region Methods
+
+///<summary> Initialize the inputs and outputs.</summary>
+void initIO()
+{
+
+    #pragma region Inputs
+
+
+
+    #pragma endregion
+
+    #pragma region Outputs
+
+    // Initialize the LCD
+    headingLCD.begin();
+
+    pinMode(SHIFT_OUT_A_LATCH_PIN, OUTPUT);
+    pinMode(SHIFT_OUT_A_DATA_PIN, OUTPUT);
+    pinMode(SHIFT_OUT_A_CLOCK_PIN, OUTPUT);
+
+    #pragma endregion
+
+}
+
+/// <summary>Records every analog input on the controller.</summary>
+void recordAnalogInputs()
 {
     // Get the raw axis values
     rotXRaw = analogRead(ROTATION_X_AXIS);
@@ -432,20 +297,82 @@ void recordInputs()
     rotButtonState = analogRead(ROTATION_BUTTON) > 50 ? true : false;
 }
 
+// Will I need a record input method??
+
+/// <summary>Updates every output on the controller.</summary>
 void updateController()
 {
     updateHeadingLCD();
     //updateSpeedLCD();
+    shiftOutA();
 }
 
+#pragma region Simpit
+
+/// <summary>Register all the needed channels for receiving simpit messages.</summary>
+void registerChannels()
+{
+    mySimpit.registerChannel(ALTITUDE_MESSAGE);
+    mySimpit.registerChannel(ROTATION_DATA);
+    mySimpit.registerChannel(VELOCITY_MESSAGE);
+    mySimpit.registerChannel(SOI_MESSAGE);
+}
+
+/// <summary>Simpit messages from ksp are received here.</summary>
+void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
+{
+    switch (messageType)
+    {
+    case ROTATION_DATA:
+        if (msgSize == sizeof(vesselPointingMessage))
+        {
+            vesselPointingMessage vpm;
+            vpm = parseMessage<vesselPointingMessage>(msg);
+            heading = vpm.heading;
+            pitch = vpm.pitch;
+            roll = vpm.roll;
+        }
+        break;
+    case VELOCITY_MESSAGE:
+        if (msgSize == sizeof(velocityMessage))
+        {
+            velocityMessage vm;
+            vm = parseMessage<velocityMessage>(msg);
+            surfaceVelocity = vm.surface;
+            orbitalVelocity = vm.orbital;
+            verticalVelocity = vm.vertical;
+        }
+        break;
+    case TARGETINFO_MESSAGE:
+        if (msgSize == sizeof(targetMessage))
+        {
+            targetMessage tm;
+            tm = parseMessage<targetMessage>(msg);
+            targetVelocity = tm.velocity;
+        }
+        break;
+    case SOI_MESSAGE:
+        soi = (char*)msg;
+        //soi[msgSize] = '\0';
+        soi[soi.length()] = '\0';
+        mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
+        break;
+    }
+}
+
+#pragma endregion
+
+#pragma region LCDs
+
+/// <summary>Update the heading LCD.</summary>
 void updateHeadingLCD()
 {
     String topTxt, botTxt;
-    // SOI txt
-    topTxt += soi;
     // Calculate gap
     // No SOI names are more than 7 char, which is good because that is the esact amount of room at max on the lcd.
-    calculateGap(soi, 7);
+    // SOI txt
+    //mySimpit.printToKSP("", PRINT_TO_SCREEN);
+    topTxt += calculateGap(soi, 7);
     // Heading txt
     topTxt += " HDG+";
     topTxt += formatNumber(heading, 3, false, false);
@@ -460,15 +387,17 @@ void updateHeadingLCD()
     botTxt += degreeChar;
     // Clear LCD
     headingLCD.clear();
-    // Print to top line
-    headingLCD.setCursor(0, 0);
-    headingLCD.print(topTxt);
     // Delay
     delay(lcdLine2Delay);
     // Print to bottom line
     headingLCD.setCursor(0, 1);
     headingLCD.print(botTxt);
+    // Print to top line
+    headingLCD.setCursor(0, 0);
+    headingLCD.print(topTxt);
 }
+
+// Speed lcd (WIP)
 /*
 void updateSpeedLCD()
 {
@@ -495,12 +424,96 @@ void updateSpeedLCD()
 }
 */
 
-/// <summary>
-/// Format numbers for LCD
-/// </summary>
-/// <param name=""></param>
-/// <param name="length"></param>
-/// <returns>Returns a formated number for a specific length</returns>
+#pragma endregion
+
+#pragma region ShiftOut
+
+void shiftOutA()
+{
+    // Define the output
+    unsigned long output = 0;
+    // Pins on registers
+    int shiftOutAPins[32];
+    shiftOutAPins[0] = (int)sfLeds[0]; // A:0
+    shiftOutAPins[1] = (int)sfLeds[1]; // A:1
+    shiftOutAPins[2] = (int)sfLeds[2]; // A:2
+    shiftOutAPins[3] = (int)sfLeds[3]; // A:3
+    shiftOutAPins[4] = (int)sfLeds[4]; // A:4
+    shiftOutAPins[5] = (int)sfLeds[5]; // A:5
+    shiftOutAPins[6] = (int)sfLeds[6]; // A:6
+    shiftOutAPins[7] = (int)sfLeds[7]; // A:7
+    shiftOutAPins[8] = (int)sfLeds[8]; // B:0
+    shiftOutAPins[9] = (int)sfLeds[9]; // B:1
+    shiftOutAPins[10] = (int)sfLeds[10]; // B:2
+    shiftOutAPins[11] = (int)sfLeds[11]; // B:3
+    shiftOutAPins[12] = (int)sfLeds[12]; // B:4
+    shiftOutAPins[13] = (int)sfLeds[13]; // B:5
+    shiftOutAPins[14] = (int)sfLeds[14]; // B:6
+    shiftOutAPins[15] = (int)sfLeds[15]; // B:7
+    shiftOutAPins[16] = (int)sfLeds[16]; // C:0
+    shiftOutAPins[17] = (int)sfLeds[17]; // C:1
+    shiftOutAPins[18] = (int)sfLeds[18]; // C:2
+    shiftOutAPins[19] = (int)sfLeds[19]; // C:4
+    // For each pin/bit
+    for (int pin = 0; pin < 32; pin++)
+    {
+        // If should be enabled
+        if (shiftOutAPins[pin] == 1)
+        {
+            // Set the value for THIS pin/bit to 1
+            bitSet(output, pin);
+        }
+    }
+    // Update the changes
+    updateShiftOut(output, 'A');
+}
+
+void updateShiftOut(unsigned long pins, char reg, BitOrder order = MSBFIRST)
+{
+    int data, latch, clock;
+
+    switch (reg)
+    {
+    case 'A':
+        data = SHIFT_OUT_A_DATA_PIN;
+        latch = SHIFT_OUT_A_LATCH_PIN;
+        clock = SHIFT_OUT_A_CLOCK_PIN;
+        break;
+        //case 'B':
+            //break;
+    default:
+        return;
+    }
+
+    unsigned int leds16 = int(pins);
+    unsigned int leds32 = int(pins >> 16);
+    byte low16LED = lowByte(leds16);
+    byte high16LED = highByte(leds16);
+    byte low32LED = lowByte(leds32);
+    byte high32LED = highByte(leds32);
+
+    // Disable
+    digitalWrite(latch, LOW);
+    shiftOut(data, clock, order, high32LED);
+    shiftOut(data, clock, order, low32LED);
+    shiftOut(data, clock, order, high16LED);
+    shiftOut(data, clock, order, low16LED);
+    // Enable
+    digitalWrite(latch, HIGH);
+}
+
+#pragma endregion
+
+#pragma region ShiftIn
+
+
+
+#pragma endregion
+
+#pragma region Tools
+
+/// <summary>Format numbers for LCD. Length max = 4.</summary>
+/// <returns>Returns a formated number at a specific length.</returns>
 String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
 {
     int num = abs(number);
@@ -528,20 +541,37 @@ String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNeg
     return str + (String)num;
 }
 
-/// <summary>
-/// Calculate a gap. Do keep in mind that the included text cannot be more than the ideal length, 
-/// if so it will not work correctly.
-/// </summary>
-/// <param name="includedTxt"></param>
-/// <param name="idealLength"></param>
-/// <returns></returns>
+/// <summary>Calculate a gap. The txt length cannot be more than the ideal length.</summary>
 String calculateGap(String includedTxt, int idealLength)
 {
     // Calculate gap
     int gap = idealLength - includedTxt.length();
+    if (gap < 0) return "";
     String str;
     for (size_t i = 0; i < gap; i++)
     {
         str += " ";
     }
+    return includedTxt + str;
+}
+
+#pragma endregion
+
+#pragma endregion
+
+void setup()
+{
+    initIO();
+
+    Serial.begin(115200);
+    while (!mySimpit.init());
+    mySimpit.inboundHandler(myCallbackHandler);
+    registerChannels();
+}
+
+void loop()
+{
+    mySimpit.update();
+    recordAnalogInputs();
+    updateController();
 }
