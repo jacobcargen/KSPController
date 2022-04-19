@@ -20,6 +20,7 @@ KerbalSimpit mySimpit(Serial);
 const int POWER_SWITCH = 53;
 const int DEBUG_MODE_SWITCH = 52;
 const int SPEAKER_ENABLE_SWITCH = 51;
+
 // Display Controls
 const int STAGE_VIEW_SWITCH = 50;
 const int VERTICAL_VELOCITY_SWITCH = 49;
@@ -114,7 +115,7 @@ const int EXTRA_1_BUTTON = 44;
 const int EXTRA_2_BUTTON = 43;
 
 // SAS Modes
-int sasButtons[10]
+int sasButtons[10];
 /*
 0:Stability Assist
 1:Maneuver
@@ -190,7 +191,7 @@ const int SHIFT_OUT_A_CLOCK_PIN = 10;
 //const int POWER_LED;
 
 // Warings
-int warningLeds[10]
+int warningLeds[10];
 /*
 0:GEE
 1:PITCH
