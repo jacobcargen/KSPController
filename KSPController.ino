@@ -269,6 +269,9 @@ int targetVelocity;
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
 
+// Pins on registers out A
+int shiftOutA[64];
+
 
 #pragma region Methods
 
@@ -328,7 +331,30 @@ void updateController()
 {
     updateHeadingLCD();
     //updateSpeedLCD();
-    shiftOutA();
+    shiftOutA(shiftOutA[], SHIFT_OUT_A_DATA_PIN, SHIFT_OUT_A_LATCH_PIN, SHIFT_OUT_A_CLOCK_PIN);
+    
+    
+    // Set pin values here
+    shiftOutA[0] = (int)sfLeds[0]; // A:0
+    shiftOutA[1] = (int)sfLeds[1]; // A:1
+    shiftOutA[2] = (int)sfLeds[2]; // A:2
+    shiftOutA[3] = (int)sfLeds[3]; // A:3
+    shiftOutA[4] = (int)sfLeds[4]; // A:4
+    shiftOutA[5] = (int)sfLeds[5]; // A:5
+    shiftOutA[6] = (int)sfLeds[6]; // A:6
+    shiftOutA[7] = (int)sfLeds[7]; // A:7
+    shiftOutA[8] = (int)sfLeds[8]; // B:0
+    shiftOutA[9] = (int)sfLeds[9]; // B:1
+    shiftOutA[10] = (int)sfLeds[10]; // B:2
+    shiftOutA[11] = (int)sfLeds[11]; // B:3
+    shiftOutA[12] = (int)sfLeds[12]; // B:4
+    shiftOutA[13] = (int)sfLeds[13]; // B:5
+    shiftOutA[14] = (int)sfLeds[14]; // B:6
+    shiftOutA[15] = (int)sfLeds[15]; // B:7
+    shiftOutA[16] = (int)sfLeds[16]; // C:0
+    shiftOutA[17] = (int)sfLeds[17]; // C:1
+    shiftOutA[18] = (int)sfLeds[18]; // C:2
+    shiftOutA[19] = (int)sfLeds[19]; // C:4
 }
 
 /// <summary>Send input data to ksp.</summary>
@@ -573,90 +599,63 @@ String calculateGap(String includedTxt, int idealLength)
 
 #pragma region ShiftOut
 
-/// <summary>Call to refesh shift register OUT group A.</summary>
-void shiftOutA()
+/// <summary>Call to shift 8 registers.</summary>
+void shiftOut8Reg(int pins[], int dataPin, int latchPin, int clockPin)
 {
-    // Define the output
-    unsigned long output = 0;
-    // Pins on registers
-    int shiftOutAPins[32];
-    shiftOutAPins[0] = (int)sfLeds[0]; // A:0
-    shiftOutAPins[1] = (int)sfLeds[1]; // A:1
-    shiftOutAPins[2] = (int)sfLeds[2]; // A:2
-    shiftOutAPins[3] = (int)sfLeds[3]; // A:3
-    shiftOutAPins[4] = (int)sfLeds[4]; // A:4
-    shiftOutAPins[5] = (int)sfLeds[5]; // A:5
-    shiftOutAPins[6] = (int)sfLeds[6]; // A:6
-    shiftOutAPins[7] = (int)sfLeds[7]; // A:7
-    shiftOutAPins[8] = (int)sfLeds[8]; // B:0
-    shiftOutAPins[9] = (int)sfLeds[9]; // B:1
-    shiftOutAPins[10] = (int)sfLeds[10]; // B:2
-    shiftOutAPins[11] = (int)sfLeds[11]; // B:3
-    shiftOutAPins[12] = (int)sfLeds[12]; // B:4
-    shiftOutAPins[13] = (int)sfLeds[13]; // B:5
-    shiftOutAPins[14] = (int)sfLeds[14]; // B:6
-    shiftOutAPins[15] = (int)sfLeds[15]; // B:7
-    shiftOutAPins[16] = (int)sfLeds[16]; // C:0
-    shiftOutAPins[17] = (int)sfLeds[17]; // C:1
-    shiftOutAPins[18] = (int)sfLeds[18]; // C:2
-    shiftOutAPins[19] = (int)sfLeds[19]; // C:4
+    // Define outputA (4bytes)
+    unsigned long outputA = 0;
+    // Define outputB (4bytes)
+    unsigned long outputB = 0;
     // For each pin/bit
-    for (int pin = 0; pin < 32; pin++)
+    for (int pin = 0; pin < pins.Length(); pin++)
     {
-        // If should be enabled
-        if (shiftOutAPins[pin] == 1)
+        // First 4 bytes
+        if (pin > 31 && pins[pin] == 1)
         {
             // Set the value for THIS pin/bit to 1
-            bitSet(output, pin);
+            bitSet(outputA, pin);
+        }
+        // Last 4 bytes
+        else if (pins[pin] == 1)
+        {
+            // Set the value for THIS pin/bit to 1
+            bitSet(outputB, pin);
         }
     }
     // Update the changes
-    updateShiftOut(output, 'A');
+    shiftOut8Reg(outputA, outputB, dataPin, latchPin, clockPin);
 }
 
-/// <summary>Updates a shift register out group.</summary>
-void updateShiftOut(unsigned long inputA, unsigned long inputB, char group)//, BitOrder order = MSBFIRST)
+/// <summary>Updates a shift register out group. (MSBFIRST)</summary>
+void shiftOut8Reg(unsigned long b0_1_2_3, unsigned long b4_5_6_7, int dataPin, int latchPin, int clockPin)
 {
-    int data, latch, clock;
-
-    switch (group)
-    {
-        case 'A':
-            data = SHIFT_OUT_A_DATA_PIN;
-            latch = SHIFT_OUT_A_LATCH_PIN;
-            clock = SHIFT_OUT_A_CLOCK_PIN;
-            break;
-        //case 'B':
-            //break;
-        default:
-            return;
-    }
-
-    unsigned int a = int(inputA);
-    unsigned int b = int(inputA >> 16)
-    unsigned int c = int(inputB);
-    unsigned int d = int(inputB >> 16);
-    byte lowA = lowByte(a);
-    byte highA = highByte(a);
-    byte lowB = lowByte(b);
-    byte highB = highByte(b);
-    byte lowC = lowByte(c);
-    byte highC = highByte(c);
-    byte lowD = lowByte(d);
-    byte highD = highByte(d);
-
+    // Break down the bytes 4-2bytes
+    unsigned int b0_1 = int(b0_1_2_3);
+    unsigned int b2_3 = int(b0_1_2_3 >> 16)
+    unsigned int b4_5 = int(b4_5_6_7);
+    unsigned int b6_7 = int(b4_5_6_7 >> 16);
+    // Break down the bytes 2-1bytes
+    byte b0 = lowByte(b0_1);
+    byte b1 = highByte(b0_1);
+    byte b2 = lowByte(b2_3);
+    byte b3 = highByte(b2_3);
+    byte b4 = lowByte(b4_5);
+    byte b5 = highByte(b4_5);
+    byte b6 = lowByte(b6_7);
+    byte b7 = highByte(b6_7);
     // Disable
-    digitalWrite(latch, LOW);
-    shiftOut(data, clock, MSBFIRST, highD);
-    shiftOut(data, clock, MSBFIRST, lowD);
-    shiftOut(data, clock, MSBFIRST, highC);
-    shiftOut(data, clock, MSBFIRST, lowC);
-    shiftOut(data, clock, MSBFIRST, highB);
-    shiftOut(data, clock, MSBFIRST, lowB);
-    shiftOut(data, clock, MSBFIRST, highA);
-    shiftOut(data, clock, MSBFIRST, lowA);
+    digitalWrite(latchPin, LOW);
+    // Shift the values into the register starting from the last register
+    shiftOut(dataPin, clockPin, MSBFIRST, b7);
+    shiftOut(dataPin, clockPin, MSBFIRST, b6);
+    shiftOut(dataPin, clockPin, MSBFIRST, b5);
+    shiftOut(dataPin, clockPin, MSBFIRST, b4);
+    shiftOut(dataPin, clockPin, MSBFIRST, b3);
+    shiftOut(dataPin, clockPin, MSBFIRST, b2);
+    shiftOut(dataPin, clockPin, MSBFIRST, b1);
+    shiftOut(dataPin, clockPin, MSBFIRST, b0);
     // Enable
-    digitalWrite(latch, HIGH);
+    digitalWrite(latchPin, HIGH);
 }
 
 #pragma endregion
