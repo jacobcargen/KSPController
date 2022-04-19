@@ -12,6 +12,8 @@
 
 // Degree character for the LCD
 const char degreeChar = 223;
+// Create insatance of Simpit
+KerbalSimpit mySimpit(Serial);
 
 #pragma region Input
 
@@ -23,69 +25,88 @@ const char degreeChar = 223;
 //const int CYCLE_REFERENCE_MODE_BUTTON;
 //const int ALT_RADAR_MODE_SWITCH;
 //const int STAGE_VIEW_SWITCH;
+
 // Info Modes(1-12)
-//const int INFO_O2_N_TIME_OPTION;
-//const int INFO_H2O_FOOD_TIME_OPTION;
-//const int INFO_EC_STRESS_TIME_OPTION;
-//const int INFO_EVAS_RADS_OPTION;
-//const int INFO_STORAGE_TRANSFER_RATE_OPTION;
-//const int INFO_TEMP_HUMIDITY_OPTION;
-//const int INFO_PRESSURE__OPTION;
-//const int INFO_EC_PRODUCE_CONSUME_OPTION;
-//const int INFO_ORBIT_OPTION;
-//const int INFO_MANEUVER_OPTION;
-//const int INFO_RENDEVOUS_OPTION;
-//const int INFO_EXTRA_OPTION;
+bool infoModes[12];
+/*
+INFO_O2_N_TIME_OPTION;
+INFO_H2O_FOOD_TIME_OPTION;
+INFO_EC_STRESS_TIME_OPTION;
+INFO_EVAS_RADS_OPTION;
+INFO_STORAGE_TRANSFER_RATE_OPTION;
+INFO_TEMP_HUMIDITY_OPTION;
+INFO_PRESSURE__OPTION;
+INFO_EC_PRODUCE_CONSUME_OPTION;
+INFO_ORBIT_OPTION;
+INFO_MANEUVER_OPTION;
+INFO_RENDEVOUS_OPTION;
+INFO_EXTRA_OPTION;
+*/
+
 // Direction Modes(9 Options)
-//const int DIR_MANEUVER_OPTION;
-//const int DIR_PROGRADE_OPTION;
-//const int DIR_RETROGRADE_OPTION;
-//const int DIR_NORMAL_OPTION;
-//const int DIR_ANTI_NORMAL_OPTION;
-//const int DIR_RADIAL_OPTION;
-//const int DIR_ANTI_RADIAL_OPTION;
-//const int DIR_TARGET_OPTION;
-//const int DIR_ANTI_TARGET_OPTION;
+bool dirModes[9];
+/*
+DIR_MANEUVER_OPTION;
+DIR_PROGRADE_OPTION;
+DIR_RETROGRADE_OPTION;
+DIR_NORMAL_OPTION;
+DIR_ANTI_NORMAL_OPTION;
+DIR_RADIAL_OPTION;
+DIR_ANTI_RADIAL_OPTION;
+DIR_TARGET_OPTION;
+DIR_ANTI_TARGET_OPTION;
+*/
+
 // Warnings
-//const int GEE_WARN_BUTTON;
-//const int PITCH_WARN_BUTTON;
-//const int TEMP_WARN_BUTTON;
-//const int WARP_WARN_BUTTON;
-//const int BRAKE_WARN_BUTTON;
-//const int FUEL_WARN_BUTTON;
-//const int VOLT_WARN_BUTTON;
-//const int RADS_WARN_BUTTON;
-//const int CO2_WARN_BUTTON;
-//const int FAULT_WARN_BUTTON;
+bool warnButtons[10];
+/*
+GEE_WARN_BUTTON;
+PITCH_WARN_BUTTON;
+TEMP_WARN_BUTTON;
+WARP_WARN_BUTTON;
+BRAKE_WARN_BUTTON;
+FUEL_WARN_BUTTON;
+VOLT_WARN_BUTTON;
+RADS_WARN_BUTTON;
+CO2_WARN_BUTTON;
+FAULT_WARN_BUTTON;
+*/
+
 // Stage & Abort
 //const int STAGE_BUTTON;
 //const int STAGE_LOCK_SWITCH;
 //const int ABORT_BUTTON;
 //const int ABORT_LOCK_SWITCH;
+
 // Action Group 1-10
-//const int AG1_BUTTON;
-//const int AG2_BUTTON;
-//const int AG3_BUTTON;
-//const int AG4_BUTTON;
-//const int AG5_RADIATORS_BUTTON;
-//const int AG6_CHUTES_BUTTON;
-//const int AG7_LADDERS_BUTTON;
-//const int AG8_SOLAR_BUTTON;
-//const int AG9_COMMS_BUTTON;
-//const int AG10_SCIENCE_BUTTON;
+bool agButtons[10];
+/*
+AG1_BUTTON;
+AG2_BUTTON;
+AG3_BUTTON;
+AG4_BUTTON;
+AG5_RADIATORS_BUTTON;
+AG6_CHUTES_BUTTON;
+AG7_LADDERS_BUTTON;
+AG8_SOLAR_BUTTON;
+AG9_COMMS_BUTTON;
+AG10_SCIENCE_BUTTON;
+*/
+
 // Control
-//const int DOCKING_MODE_SWITCH;
-//const int PERCISION_MODE_SWITCH;
-//const int GEAR_SWITCH;
-//const int LIGHTS_SWITCH;
-//const int BRAKE_SWITCH;
-//const int SAS_SWITCH;
-//const int RCS_SWITCH;
-//const int THROTTLE_LOCK_SWITCH;
-//const int SET_TRIM_TRANSLATION;
-//const int RESET_TRIM_TRANSLATION;
-//const int SET_TRIM_ROTATION;
-//const int RESET_TRIM_ROTATION;
+int dockingModeSwitch;
+int percisionModeSwitch;
+int gearSwitch;
+int lightsSwitch;
+int brakeSwitch;
+int sasSwitch;
+int rcsSwitch;
+int throttleLockSwitch;
+int setTrimTranslationButton;
+int resetTrimTranslationButton;
+int setTrimRotationButton;
+int resetTrimRotationButton;
+
 // EVA
 //const int EXTRA_1_BUTTON;
 //const int EXTRA_2_BUTTON;
@@ -146,6 +167,8 @@ int rotXRaw, rotYRaw, rotZRaw;
 int transXRaw, transYRaw, transZRaw;
 // Joystick buttons
 bool rotButtonState, transButtonState;
+// Throttle analog
+int throttleRaw;
 
 bool stageButtonState = false;
 
@@ -171,7 +194,7 @@ const int SHIFT_OUT_A_CLOCK_PIN = 10;
 //const int CO2_WARN_LED;
 //const int FAULT_WARN_LED;
 
-#pragma region LED_BARS
+#pragma region LED_BARS // True for on
 
 // SF
 bool sfLeds[20];
@@ -199,16 +222,7 @@ LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 
 //const int ABORT_LED;
 //const int ABORT_LOCK_LED;
 // Action Group 1-10
-//const int AG1_LED;
-//const int AG2_LED;
-//const int AG3_LED;
-//const int AG4_LED;
-//const int AG5_RADIATORS_LED;
-//const int AG6_CHUTES_LED;
-//const int AG7_LADDERS_LED;
-//const int AG8_SOLAR_LED;
-//const int AG9_COMMS_LED;
-//const int AG10_SCIENCE_LED;
+bool agLeds[10];
 // Control
 //const int DOCKING_MODE_LED;
 //const int PERCISION_MODE_LED;
@@ -252,14 +266,6 @@ int targetVelocity;
 
 #pragma endregion
 
-#pragma region Simpit
-
-KerbalSimpit mySimpit(Serial);
-
-#pragma endregion
-
-
-
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
 
@@ -302,6 +308,7 @@ void recordInputs()
     transXRaw = analogRead(TRANSLATION_X_AXIS_PIN);
     transYRaw = analogRead(TRANSLATION_Y_AXIS_PIN);
     transZRaw = analogRead(TRANSLATION_Z_AXIS_PIN);
+    throttleRaw = analogRead(THROTTLE_AXIS_PIN);
     // If button less then 50, then set to true, otherwise set false;
     rotButtonState = analogRead(ROTATION_BUTTON_PIN) > 50 ? false : true;
     transButtonState = analogRead(TRANSLATION_BUTTON_PIN) > 50 ? false : true;
@@ -324,6 +331,14 @@ void updateController()
     shiftOutA();
 }
 
+/// <summary>Send input data to ksp.</summary>
+void sendInputs()
+{
+    sendJoystickValues('A');
+    sendJoystickValues('B');
+    sendThrottleValues();
+}
+
 #pragma region Simpit
 
 /// <summary>Register all the needed channels for receiving simpit messages.</summary>
@@ -340,41 +355,111 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 {
     switch (messageType)
     {
-    case ROTATION_DATA:
-        if (msgSize == sizeof(vesselPointingMessage))
-        {
-            vesselPointingMessage vpm;
-            vpm = parseMessage<vesselPointingMessage>(msg);
-            heading = vpm.heading;
-            pitch = vpm.pitch;
-            roll = vpm.roll;
-        }
+        case ROTATION_DATA:
+            if (msgSize == sizeof(vesselPointingMessage))
+            {
+                vesselPointingMessage vpm;
+                vpm = parseMessage<vesselPointingMessage>(msg);
+                heading = vpm.heading;
+                pitch = vpm.pitch;
+                roll = vpm.roll;
+            }
+            break;
+        case VELOCITY_MESSAGE:
+            if (msgSize == sizeof(velocityMessage))
+            {
+                velocityMessage vm;
+                vm = parseMessage<velocityMessage>(msg);
+                surfaceVelocity = vm.surface;
+                orbitalVelocity = vm.orbital;
+                verticalVelocity = vm.vertical;
+            }
+            break;
+        case TARGETINFO_MESSAGE:
+            if (msgSize == sizeof(targetMessage))
+            {
+                targetMessage tm;
+                tm = parseMessage<targetMessage>(msg);
+                targetVelocity = tm.velocity;
+            }
+            break;
+        case SOI_MESSAGE:
+            soi = (char*)msg;
+            //soi[msgSize] = '\0';
+            soi[soi.length()] = '\0';
+            mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma endregion
+
+#pragma region Analog
+
+/// <summary>Send joystick values to ksp.</summary>
+void sendJoystickValues(char option)
+{
+    int x, y, z;
+    rotationMessage rotMsg;
+    translationMessage transMsg;
+
+    // Smoothing
+    //int pitch = smoothAxis(rotYRaw);
+    switch (option)
+    {
+    case 'A':
+        x = smoothAxis(rotXRaw);
+        y = smoothAxis(rotYRaw);
+        z = smoothAxis(rotZRaw);
         break;
-    case VELOCITY_MESSAGE:
-        if (msgSize == sizeof(velocityMessage))
-        {
-            velocityMessage vm;
-            vm = parseMessage<velocityMessage>(msg);
-            surfaceVelocity = vm.surface;
-            orbitalVelocity = vm.orbital;
-            verticalVelocity = vm.vertical;
-        }
+    case 'B':
+        x = smoothAxis(transXRaw);
+        y = smoothAxis(transYRaw);
+        z = smoothAxis(transZRaw);
         break;
-    case TARGETINFO_MESSAGE:
-        if (msgSize == sizeof(targetMessage))
-        {
-            targetMessage tm;
-            tm = parseMessage<targetMessage>(msg);
-            targetVelocity = tm.velocity;
-        }
-        break;
-    case SOI_MESSAGE:
-        soi = (char*)msg;
-        //soi[msgSize] = '\0';
-        soi[soi.length()] = '\0';
-        mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
+    default:
         break;
     }
+    int16_t xMap = map(x, 0, 1023, INT16_MIN, INT16_MAX);
+    int16_t yMap = map(y, 0, 1023, INT16_MIN, INT16_MAX);
+    int16_t zMap = map(z, 0, 1023, INT16_MIN, INT16_MAX);
+    switch (option)
+    {
+    case 'A': // Rotation
+        xMap *= -1;
+        rotMsg.setPitchRollYaw(yMap, xMap, zMap);
+        mySimpit.send(ROTATION_MESSAGE, rotMsg);
+        break;
+    case 'B':
+        zMap *= -1;
+        transMsg.setXYZ(xMap, zMap, yMap);
+        mySimpit.send(TRANSLATION_MESSAGE, transMsg);
+        break;
+    default:
+        break;
+    }
+}
+
+/// <summary>Send throttle values to ksp.</summary>
+void sendThrottleValues()
+{
+    // Create new throttle msg
+    throttleMessage throttleMsg;
+    // Smooth the raw input
+    int thr = smoothAxis(throttleRaw);
+    // Convert the smoothed number
+    int16_t thrMap = map(thr, 0, 1023, INT16_MIN, INT16_MAX);
+    // Set the throttle value
+    throttleMsg.throttle = thrMap;
+}
+
+/// <summary>Give the raw analog some smoothing.</summary>
+/// <returns>Returns a smoothed value.</returns>
+int smoothAxis(int raw)
+{
+    return raw;
 }
 
 #pragma endregion
@@ -441,94 +526,6 @@ void updateSpeedLCD()
 }
 */
 
-#pragma endregion
-
-#pragma region ShiftOut
-
-void updateShiftOut(unsigned long pins, char reg)//, BitOrder order = MSBFIRST)
-{
-    int data, latch, clock;
-
-    switch (reg)
-    {
-        case 'A':
-            data = SHIFT_OUT_A_DATA_PIN;
-            latch = SHIFT_OUT_A_LATCH_PIN;
-            clock = SHIFT_OUT_A_CLOCK_PIN;
-            break;
-        //case 'B':
-            //break;
-        default:
-            return;
-    }
-
-    unsigned int leds16 = int(pins);
-    unsigned int leds32 = int(pins >> 16);
-    byte low16LED = lowByte(leds16);
-    byte high16LED = highByte(leds16);
-    byte low32LED = lowByte(leds32);
-    byte high32LED = highByte(leds32);
-
-    // Disable
-    digitalWrite(latch, LOW);
-    shiftOut(data, clock, MSBFIRST, high32LED);
-    shiftOut(data, clock, MSBFIRST, low32LED);
-    shiftOut(data, clock, MSBFIRST, high16LED);
-    shiftOut(data, clock, MSBFIRST, low16LED);
-    // Enable
-    digitalWrite(latch, HIGH);
-}
-
-void shiftOutA()
-{
-    // Define the output
-    unsigned long output = 0;
-    // Pins on registers
-    int shiftOutAPins[32];
-    shiftOutAPins[0] = (int)sfLeds[0]; // A:0
-    shiftOutAPins[1] = (int)sfLeds[1]; // A:1
-    shiftOutAPins[2] = (int)sfLeds[2]; // A:2
-    shiftOutAPins[3] = (int)sfLeds[3]; // A:3
-    shiftOutAPins[4] = (int)sfLeds[4]; // A:4
-    shiftOutAPins[5] = (int)sfLeds[5]; // A:5
-    shiftOutAPins[6] = (int)sfLeds[6]; // A:6
-    shiftOutAPins[7] = (int)sfLeds[7]; // A:7
-    shiftOutAPins[8] = (int)sfLeds[8]; // B:0
-    shiftOutAPins[9] = (int)sfLeds[9]; // B:1
-    shiftOutAPins[10] = (int)sfLeds[10]; // B:2
-    shiftOutAPins[11] = (int)sfLeds[11]; // B:3
-    shiftOutAPins[12] = (int)sfLeds[12]; // B:4
-    shiftOutAPins[13] = (int)sfLeds[13]; // B:5
-    shiftOutAPins[14] = (int)sfLeds[14]; // B:6
-    shiftOutAPins[15] = (int)sfLeds[15]; // B:7
-    shiftOutAPins[16] = (int)sfLeds[16]; // C:0
-    shiftOutAPins[17] = (int)sfLeds[17]; // C:1
-    shiftOutAPins[18] = (int)sfLeds[18]; // C:2
-    shiftOutAPins[19] = (int)sfLeds[19]; // C:4
-    // For each pin/bit
-    for (int pin = 0; pin < 32; pin++)
-    {
-        // If should be enabled
-        if (shiftOutAPins[pin] == 1)
-        {
-            // Set the value for THIS pin/bit to 1
-            bitSet(output, pin);
-        }
-    }
-    // Update the changes
-    updateShiftOut(output, 'A');
-}
-
-#pragma endregion
-
-#pragma region ShiftIn
-
-
-
-#pragma endregion
-
-#pragma region Tools
-
 /// <summary>Format numbers for LCD. Length max = 4.</summary>
 /// <returns>Returns a formated number at a specific length.</returns>
 String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
@@ -574,8 +571,95 @@ String calculateGap(String includedTxt, int idealLength)
 
 #pragma endregion
 
+#pragma region ShiftOut
+
+/// <summary>Call to refesh shift register OUT group A.</summary>
+void shiftOutA()
+{
+    // Define the output
+    unsigned long output = 0;
+    // Pins on registers
+    int shiftOutAPins[32];
+    shiftOutAPins[0] = (int)sfLeds[0]; // A:0
+    shiftOutAPins[1] = (int)sfLeds[1]; // A:1
+    shiftOutAPins[2] = (int)sfLeds[2]; // A:2
+    shiftOutAPins[3] = (int)sfLeds[3]; // A:3
+    shiftOutAPins[4] = (int)sfLeds[4]; // A:4
+    shiftOutAPins[5] = (int)sfLeds[5]; // A:5
+    shiftOutAPins[6] = (int)sfLeds[6]; // A:6
+    shiftOutAPins[7] = (int)sfLeds[7]; // A:7
+    shiftOutAPins[8] = (int)sfLeds[8]; // B:0
+    shiftOutAPins[9] = (int)sfLeds[9]; // B:1
+    shiftOutAPins[10] = (int)sfLeds[10]; // B:2
+    shiftOutAPins[11] = (int)sfLeds[11]; // B:3
+    shiftOutAPins[12] = (int)sfLeds[12]; // B:4
+    shiftOutAPins[13] = (int)sfLeds[13]; // B:5
+    shiftOutAPins[14] = (int)sfLeds[14]; // B:6
+    shiftOutAPins[15] = (int)sfLeds[15]; // B:7
+    shiftOutAPins[16] = (int)sfLeds[16]; // C:0
+    shiftOutAPins[17] = (int)sfLeds[17]; // C:1
+    shiftOutAPins[18] = (int)sfLeds[18]; // C:2
+    shiftOutAPins[19] = (int)sfLeds[19]; // C:4
+    // For each pin/bit
+    for (int pin = 0; pin < 32; pin++)
+    {
+        // If should be enabled
+        if (shiftOutAPins[pin] == 1)
+        {
+            // Set the value for THIS pin/bit to 1
+            bitSet(output, pin);
+        }
+    }
+    // Update the changes
+    updateShiftOut(output, 'A');
+}
+
+/// <summary>Updates a shift register out group.</summary>
+void updateShiftOut(unsigned long pins, char group)//, BitOrder order = MSBFIRST)
+{
+    int data, latch, clock;
+
+    switch (group)
+    {
+        case 'A':
+            data = SHIFT_OUT_A_DATA_PIN;
+            latch = SHIFT_OUT_A_LATCH_PIN;
+            clock = SHIFT_OUT_A_CLOCK_PIN;
+            break;
+        //case 'B':
+            //break;
+        default:
+            return;
+    }
+
+    unsigned int leds16 = int(pins);
+    unsigned int leds32 = int(pins >> 16);
+    byte low16LED = lowByte(leds16);
+    byte high16LED = highByte(leds16);
+    byte low32LED = lowByte(leds32);
+    byte high32LED = highByte(leds32);
+
+    // Disable
+    digitalWrite(latch, LOW);
+    shiftOut(data, clock, MSBFIRST, high32LED);
+    shiftOut(data, clock, MSBFIRST, low32LED);
+    shiftOut(data, clock, MSBFIRST, high16LED);
+    shiftOut(data, clock, MSBFIRST, low16LED);
+    // Enable
+    digitalWrite(latch, HIGH);
+}
+
 #pragma endregion
 
+#pragma region ShiftIn
+
+
+
+#pragma endregion
+
+#pragma endregion
+
+/// <summary>Called at the start of the program.</summary>
 void setup()
 {
     // Initialize the i/o
@@ -583,23 +667,26 @@ void setup()
     // Open up the serial port
     Serial.begin(115200);
     // Wait for a connection to ksp
-    //while (!mySimpit.init());
+    while (!mySimpit.init());
+    // Show that the controller has connected
+    mySimpit.printToKSP("Controller Connected!", PRINT_TO_SCREEN);
     // Register a method for receiving simpit messages from ksp
     mySimpit.inboundHandler(myCallbackHandler);
     // Register the simpit channels
     registerChannels();
 }
 
+/// <summary>Loops while the arduino is on.</summary>
 void loop()
 {
     // Update simpit
     mySimpit.update();
     // Record analog inputs
     recordInputs();
+    // Update the inputs to ksp
+    sendInputs();
     // Update the controllers outputs
     updateController();
-
-    Serial.print("");//"X:" + rotXRaw);
 
     delay(100);
 }
