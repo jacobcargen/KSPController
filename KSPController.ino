@@ -615,7 +615,7 @@ void shiftOutA()
 }
 
 /// <summary>Updates a shift register out group.</summary>
-void updateShiftOut(unsigned long pins, char group)//, BitOrder order = MSBFIRST)
+void updateShiftOut(unsigned long inputA, unsigned long inputB, char group)//, BitOrder order = MSBFIRST)
 {
     int data, latch, clock;
 
@@ -632,19 +632,29 @@ void updateShiftOut(unsigned long pins, char group)//, BitOrder order = MSBFIRST
             return;
     }
 
-    unsigned int leds16 = int(pins);
-    unsigned int leds32 = int(pins >> 16);
-    byte low16LED = lowByte(leds16);
-    byte high16LED = highByte(leds16);
-    byte low32LED = lowByte(leds32);
-    byte high32LED = highByte(leds32);
+    unsigned int a = int(inputA);
+    unsigned int b = int(inputA >> 16)
+    unsigned int c = int(inputB);
+    unsigned int d = int(inputB >> 16);
+    byte lowA = lowByte(a);
+    byte highA = highByte(a);
+    byte lowB = lowByte(b);
+    byte highB = highByte(b);
+    byte lowC = lowByte(c);
+    byte highC = highByte(c);
+    byte lowD = lowByte(d);
+    byte highD = highByte(d);
 
     // Disable
     digitalWrite(latch, LOW);
-    shiftOut(data, clock, MSBFIRST, high32LED);
-    shiftOut(data, clock, MSBFIRST, low32LED);
-    shiftOut(data, clock, MSBFIRST, high16LED);
-    shiftOut(data, clock, MSBFIRST, low16LED);
+    shiftOut(data, clock, MSBFIRST, highD);
+    shiftOut(data, clock, MSBFIRST, lowD);
+    shiftOut(data, clock, MSBFIRST, highC);
+    shiftOut(data, clock, MSBFIRST, lowC);
+    shiftOut(data, clock, MSBFIRST, highB);
+    shiftOut(data, clock, MSBFIRST, lowB);
+    shiftOut(data, clock, MSBFIRST, highA);
+    shiftOut(data, clock, MSBFIRST, lowA);
     // Enable
     digitalWrite(latch, HIGH);
 }
