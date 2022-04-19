@@ -17,80 +17,82 @@ KerbalSimpit mySimpit(Serial);
 
 #pragma region Input
 
-//const int POWER_SWITCH;
-//const int DEBUG_MODE_SWITCH;
-//const int SPEAKER_ENABLE_SWITCH;
+const int POWER_SWITCH = 53;
+const int DEBUG_MODE_SWITCH = 52;
+const int SPEAKER_ENABLE_SWITCH = 51;
 // Display Controls
-//const int VERTICAL_VELOCITY_SWITCH;
-//const int CYCLE_REFERENCE_MODE_BUTTON;
-//const int ALT_RADAR_MODE_SWITCH;
-//const int STAGE_VIEW_SWITCH;
+const int STAGE_VIEW_SWITCH = 50;
+const int VERTICAL_VELOCITY_SWITCH = 49;
+const int CYCLE_REFERENCE_MODE_BUTTON = 48;
+const int ALT_RADAR_MODE_SWITCH = 47;
 
 // Info Modes(1-12)
 bool infoModes[12];
 /*
-INFO_O2_N_TIME_OPTION;
-INFO_H2O_FOOD_TIME_OPTION;
-INFO_EC_STRESS_TIME_OPTION;
-INFO_EVAS_RADS_OPTION;
-INFO_STORAGE_TRANSFER_RATE_OPTION;
-INFO_TEMP_HUMIDITY_OPTION;
-INFO_PRESSURE__OPTION;
-INFO_EC_PRODUCE_CONSUME_OPTION;
-INFO_ORBIT_OPTION;
-INFO_MANEUVER_OPTION;
-INFO_RENDEVOUS_OPTION;
-INFO_EXTRA_OPTION;
+O2 time left + amt
+N time left + amt
+H20 time left + amt
+Food time left + amt
+EC time left + amt
+EC consume/produce rate
+Stress time left + amt (worst kerbal)
+Rads rate + amt (worst kerbal)
+Comms rate + storage(Hard drive storage for science)
+Science sample capcity
+Temp + humidity + pressure
+Orbit mode
+Maneuver mode
 */
 
 // Direction Modes(9 Options)
-bool dirModes[9];
+bool dirModes[12];
 /*
-DIR_MANEUVER_OPTION;
-DIR_PROGRADE_OPTION;
-DIR_RETROGRADE_OPTION;
-DIR_NORMAL_OPTION;
-DIR_ANTI_NORMAL_OPTION;
-DIR_RADIAL_OPTION;
-DIR_ANTI_RADIAL_OPTION;
-DIR_TARGET_OPTION;
-DIR_ANTI_TARGET_OPTION;
+0:Maneuver
+1:Prograde
+2:Retrograde
+3:Normal
+4:Anti-Normal
+5:Radial
+6:Anti-Radial
+7:Target
+8:Anti-Target
+9:Custom0
+10:Custom1
+11:Custom2
 */
 
-// Warnings
+// Warnings (Press to disable warning(New alerts will still trigger))
 bool warnButtons[10];
 /*
-GEE_WARN_BUTTON;
-PITCH_WARN_BUTTON;
-TEMP_WARN_BUTTON;
-WARP_WARN_BUTTON;
-BRAKE_WARN_BUTTON;
-FUEL_WARN_BUTTON;
-VOLT_WARN_BUTTON;
-RADS_WARN_BUTTON;
-CO2_WARN_BUTTON;
-FAULT_WARN_BUTTON;
+0:GEE
+1:PITCH
+2:TEMP
+3:WARP
+4:BRAKE
+5:FUEL
+6:VOLT
+7:RADS
+8:CO2
+9:FAULT
 */
 
 // Stage & Abort
-//const int STAGE_BUTTON;
-//const int STAGE_LOCK_SWITCH;
-//const int ABORT_BUTTON;
-//const int ABORT_LOCK_SWITCH;
+const int STAGE_BUTTON = 46;
+const int ABORT_BUTTON = 45;
 
 // Action Group 1-10
 bool agButtons[10];
 /*
-AG1_BUTTON;
-AG2_BUTTON;
-AG3_BUTTON;
-AG4_BUTTON;
-AG5_RADIATORS_BUTTON;
-AG6_CHUTES_BUTTON;
-AG7_LADDERS_BUTTON;
-AG8_SOLAR_BUTTON;
-AG9_COMMS_BUTTON;
-AG10_SCIENCE_BUTTON;
+0:ag1
+1:ag2
+2:ag3
+3:ag4
+4:ag5 Radiators
+5:ag6 Chutes
+6:ag7 Ladders
+7:ag8 Solar
+8:ag9 Comms
+9:ag10 Science
 */
 
 // Control
@@ -108,34 +110,40 @@ int setTrimRotationButton;
 int resetTrimRotationButton;
 
 // EVA
-//const int EXTRA_1_BUTTON;
-//const int EXTRA_2_BUTTON;
+const int EXTRA_1_BUTTON = 44;
+const int EXTRA_2_BUTTON = 43;
+
 // SAS Modes
-//const int SAS_MODE_STABILITY_ASSIST_BUTTON;
-//const int SAS_MODE_MANEUVER_BUTTON;
-//const int SAS_MODE_PROGRADE_BUTTON;
-//const int SAS_MODE_RETROGRADE_BUTTON;
-//const int SAS_MODE_NORMAL_BUTTON;
-//const int SAS_MODE_ANTI_NORMAL_BUTTON;
-//const int SAS_MODE_RADIAL_BUTTON;
-//const int SAS_MODE_ANTI_RADIAL_BUTTON;
-//const int SAS_MODE_TARGET_BUTTON;
-//const int SAS_MODE_ANTI_TARGET_BUTTON;
+int sasButtons[10]
+/*
+0:Stability Assist
+1:Maneuver
+2:Prograde
+3:Retrograde
+4:Normal
+5:Anti-Normal
+6:Radial
+7:Anti-Radial
+8:Target
+9:Anti-Target
+*/
+
 // Warping & Time Control
-//const int WARP_LOCK_SWITCH;
-//const int PAUSE_BUTTON;
-//const int CANCEL_WARP_BUTTON;
-//const int PHYSICS_WARP_SWITCH;
-//const int DECREASE_WARP_BUTTON;
-//const int INCREASE_WARP_BUTOTN;
+int warpLockSwitch;
+int pauseButton;
+int cancelWarpButton;
+int enablePhysWarpSwitch;
+int decreaseWarpButton;
+int increaseWarpButton;
+
 // View
-//const int CYCLE_FOCUS_BUTTON;
-//const int HIDE_UI_SWITCH;
-//const int SCREENSHOT_BUTTON;
-//const int MAP_FLIGHT_SWITCH;
-//const int EXT_IVA_SWITCH;
-//const int CYCLE_CAMERA_MODE_BUTTON;
-//const int RESET_CAMERA_BUTTON;
+int cycleFocusButton;
+int hideUIButton;
+int screenshotButton;
+int mapFlightSwitch;
+int extIvaSwitch;
+int cycleCamModeButton;
+int resetCamButton;
 
 #pragma region AnalogPins
 
@@ -170,8 +178,6 @@ bool rotButtonState, transButtonState;
 // Throttle analog
 int throttleRaw;
 
-bool stageButtonState = false;
-
 #pragma endregion
 
 #pragma region Output
@@ -182,17 +188,21 @@ const int SHIFT_OUT_A_LATCH_PIN = 9;
 const int SHIFT_OUT_A_CLOCK_PIN = 10;
 
 //const int POWER_LED;
+
 // Warings
-//const int GEE_WARN_LED;
-//const int PITCH_WARN_LED;
-//const int TEMP_WARN_LED;
-//const int WARP_WARN_LED;
-//const int BRAKE_WARN_LED;
-//const int FUEL_WARN_LED;
-//const int VOLT_WARN_LED;
-//const int RADS_WARN_LED;
-//const int CO2_WARN_LED;
-//const int FAULT_WARN_LED;
+int warningLeds[10]
+/*
+0:GEE
+1:PITCH
+2:TEMP
+3:WARP
+4:BRAKE
+5:FUEL
+6:VOLT
+7:RADS
+8:CO2
+9:FAULT
+*/
 
 #pragma region LED_BARS // True for on
 
@@ -217,34 +227,47 @@ LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 
 #pragma endregion
 
 // Stage & Abort
-//const int STAGE_LED = 2;
-//const int STAGE_LOCK_LED;
+//const int STAGE_LED = ;
 //const int ABORT_LED;
-//const int ABORT_LOCK_LED;
+
 // Action Group 1-10
 bool agLeds[10];
+/*
+0:ag1
+1:ag2
+2:ag3
+3:ag4
+4:ag5 Radiators
+5:ag6 Chutes
+6:ag7 Ladders
+7:ag8 Solar
+8:ag9 Comms
+9:ag10 Science
+*/
+
 // Control
-//const int DOCKING_MODE_LED;
-//const int PERCISION_MODE_LED;
-//const int GEAR_LED;
-//const int LIGHTS_LED;
-//const int BRAKE_LED;
-//const int SAS_LED;
-//const int RCS_LED;
-//const int THROTTLE_LOCK_LED;
+int dockingModeLed;
+int PercisionModeLed;
+int gearLed;
+int lightsLed;
+int brakeLed;
+int sasLed;
+int rcsLed;
+
 // SAS Modes
-//const int SAS_MODE_STABILITY_ASSIST_LED;
-//const int SAS_MODE_MANEUVER_LED;
-//const int SAS_MODE_PROGRADE_LED;
-//const int SAS_MODE_RETROGRADE_LED;
-//const int SAS_MODE_NORMAL_LED;
-//const int SAS_MODE_ANTI_NORMAL_LED;
-//const int SAS_MODE_RADIAL_LED;
-//const int SAS_MODE_ANTI_RADIAL_LED;
-//const int SAS_MODE_TARGET_LED;
-//const int SAS_MODE_ANTI_TARGET_LED;
-// Warping & Time Control
-//const int WARP_LOCK_LED;
+int sasModeLeds[10]
+/*
+0:Stability Assist
+1:Maneuver
+2:Prograde
+3:Retrograde
+4:Normal
+5:Anti-Normal
+6:Radial
+7:Anti-Radial
+8:Target
+9:Anti-Target
+*/
 
 #pragma region KspInfo
 
