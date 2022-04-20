@@ -490,9 +490,13 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 
 #pragma region Getting
 
-unsigned long[] getShiftIn(int dataPin, int latchPin, int clockPin)
+void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int latchPinB, int clockPinB)
 {
 
+
+    // Get the values
+    shiftInA;
+    shiftInB;
 }
 
 #pragma endregion
@@ -543,70 +547,70 @@ int16_t smoothAndMapAxis(int raw)
 
 void getInputRegisters()
 {
-    var = (bool)shiftInA[0];
-     = (bool)shiftInA[1];
-     = (bool)shiftInA[2];
-     = (bool)shiftInA[3];
-     = (bool)shiftInA[4];
-     = (bool)shiftInA[5];
-     = (bool)shiftInA[6];
-     = (bool)shiftInA[7];
-     = (bool)shiftInA[8];
-     = (bool)shiftInA[9];
-     = (bool)shiftInA[10];
-     = (bool)shiftInA[11];
-     = (bool)shiftInA[12];
-     = (bool)shiftInA[13];
-     = (bool)shiftInA[14];
-     = (bool)shiftInA[15];
-     = (bool)shiftInA[16];
-     = (bool)shiftInA[17];
-     = (bool)shiftInA[18];
-     = (bool)shiftInA[19];
-     = (bool)shiftInA[20];
-     = (bool)shiftInA[21];
-     = (bool)shiftInA[22];
-     = (bool)shiftInA[23];
-     = (bool)shiftInA[24];
-     = (bool)shiftInA[25];
-     = (bool)shiftInA[26];
-     = (bool)shiftInA[27];
-     = (bool)shiftInA[28];
-     = (bool)shiftInA[29];
-     = (bool)shiftInA[30];
-     = (bool)shiftInA[31];
-     = (bool)shiftInA[32];
-     = (bool)shiftInA[33];
-     = (bool)shiftInA[34];
-     = (bool)shiftInA[35];
-     = (bool)shiftInA[36];
-     = (bool)shiftInA[37];
-     = (bool)shiftInA[38];
-     = (bool)shiftInA[39];
-     = (bool)shiftInA[40];
-     = (bool)shiftInA[41];
-     = (bool)shiftInA[42];
-     = (bool)shiftInA[43];
-     = (bool)shiftInA[44];
-     = (bool)shiftInA[45];
-     = (bool)shiftInA[46];
-     = (bool)shiftInA[47];
-     = (bool)shiftInA[48];
-     = (bool)shiftInA[49];
-     = (bool)shiftInA[50];
-     = (bool)shiftInA[51];
-     = (bool)shiftInA[52];
-     = (bool)shiftInA[53];
-     = (bool)shiftInA[54];
-     = (bool)shiftInA[55];
-     = (bool)shiftInA[56];
-     = (bool)shiftInA[57];
-     = (bool)shiftInA[58];
-     = (bool)shiftInA[59];
-     = (bool)shiftInA[60];
-     = (bool)shiftInA[61];
-     = (bool)shiftInA[62];
-     = (bool)shiftInA[63];
+     = (bool)shiftInA[0]; // A:0
+     = (bool)shiftInA[1]; // A:1
+     = (bool)shiftInA[2]; // A:2
+     = (bool)shiftInA[3]; // A:3
+     = (bool)shiftInA[4]; // A:4
+     = (bool)shiftInA[5]; // A:5
+     = (bool)shiftInA[6]; // A:6
+     = (bool)shiftInA[7]; // A:7
+     = (bool)shiftInA[8]; // B:0
+     = (bool)shiftInA[9]; // B:1
+     = (bool)shiftInA[10]; // B:2
+     = (bool)shiftInA[11]; // B:3
+     = (bool)shiftInA[12]; // B:4
+     = (bool)shiftInA[13]; // B:5
+     = (bool)shiftInA[14]; // B:6
+     = (bool)shiftInA[15]; // B:7
+     = (bool)shiftInA[16]; // C:0
+     = (bool)shiftInA[17]; // C:1
+     = (bool)shiftInA[18]; // C:2
+     = (bool)shiftInA[19]; // C:3
+     = (bool)shiftInA[20]; // C:4
+     = (bool)shiftInA[21]; // C:5
+     = (bool)shiftInA[22]; // C:6
+     = (bool)shiftInA[23]; // C:7
+     = (bool)shiftInA[24]; // D:0
+     = (bool)shiftInA[25]; // D:1
+     = (bool)shiftInA[26]; // D:2
+     = (bool)shiftInA[27]; // D:3
+     = (bool)shiftInA[28]; // D:4
+     = (bool)shiftInA[29]; // D:5
+     = (bool)shiftInA[30]; // D:6
+     = (bool)shiftInA[31]; // D:7
+     = (bool)shiftInA[32]; // E:0
+     = (bool)shiftInA[33]; // E:1
+     = (bool)shiftInA[34]; // E:2
+     = (bool)shiftInA[35]; // E:3
+     = (bool)shiftInA[36]; // E:4
+     = (bool)shiftInA[37]; // E:5
+     = (bool)shiftInA[38]; // E:6
+     = (bool)shiftInA[39]; // E:7
+     = (bool)shiftInA[40]; // F:0
+     = (bool)shiftInA[41]; // F:1
+     = (bool)shiftInA[42]; // F:2
+     = (bool)shiftInA[43]; // F:3
+     = (bool)shiftInA[44]; // F:4
+     = (bool)shiftInA[45]; // F:5
+     = (bool)shiftInA[46]; // F:6
+     = (bool)shiftInA[47]; // F:7
+     = (bool)shiftInA[48]; // G:0
+     = (bool)shiftInA[49]; // G:1
+     = (bool)shiftInA[50]; // G:2
+     = (bool)shiftInA[51]; // G:3
+     = (bool)shiftInA[52]; // G:4
+     = (bool)shiftInA[53]; // G:5
+     = (bool)shiftInA[54]; // G:6
+     = (bool)shiftInA[55]; // G:7
+     = (bool)shiftInA[56]; // H:0
+     = (bool)shiftInA[57]; // H:1
+     = (bool)shiftInA[58]; // H:2
+     = (bool)shiftInA[59]; // H:3
+     = (bool)shiftInA[60]; // H:4
+     = (bool)shiftInA[61]; // H:5
+     = (bool)shiftInA[62]; // H:6
+     = (bool)shiftInA[63]; // H:7
 
      = (bool)shiftInB[0];
      = (bool)shiftInB[1];
