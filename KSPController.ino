@@ -4,6 +4,7 @@
  Author:	jacob
 */
 
+#include "Test.h"
 #include <Array.h>
 #include <PayloadStructs.h>
 #include <KerbalSimpitMessageTypes.h>
@@ -19,18 +20,29 @@ KerbalSimpit mySimpit(Serial);
 #pragma region InputPinsStates
 
 const int POWER_SWITCH = 53;
+bool powerSwitch;
 const int DEBUG_MODE_SWITCH = 52;
+bool debugSwitch;
 const int SPEAKER_ENABLE_SWITCH = 51;
+bool speakerEnableSwitch;
 // Display Controls
 const int STAGE_VIEW_SWITCH = 50;
+bool stageViewSwitch;
 const int VERTICAL_VELOCITY_SWITCH = 49;
+bool verticalVelocitySwitch;
 const int CYCLE_REFERENCE_MODE_BUTTON = 48;
+bool cycleRefModeButton;
 const int ALT_RADAR_MODE_SWITCH = 47;
+bool altRadarModeSwitch;
 // Stage & Abort
 const int STAGE_BUTTON = 46;
+bool stageButton;
 const int STAGE_LOCK_SWITCH = 45;
+bool stageLockSwitch;
 const int ABORT_BUTTON = 44;
+bool abortButton;
 const int ABORT_LOCK_SWITCH = 43;
+bool abortLockSwitch;
 // Info Modes(1-12)
 bool infoModes[12];
 /*
@@ -97,20 +109,20 @@ bool agButtons[10];
 */
 
 // Control
-int dockingModeSwitch;
-int percisionModeSwitch;
-int gearSwitch;
-int lightsSwitch;
-int brakeSwitch;
-int sasSwitch;
-int rcsSwitch;
-int throttleLockSwitch;
-int setTrimTranslationButton;
-int resetTrimTranslationButton;
-int setTrimRotationButton;
-int resetTrimRotationButton;
+bool dockingModeSwitch;
+bool percisionModeSwitch;
+bool gearSwitch;
+bool lightsSwitch;
+bool brakeSwitch;
+bool sasSwitch;
+bool rcsSwitch;
+bool throttleLockSwitch;
+bool setTrimTranslationButton;
+bool resetTrimTranslationButton;
+bool setTrimRotationButton;
+bool resetTrimRotationButton;
 // SAS Modes
-int sasButtons[10];
+bool sasButtons[10];
 /*
 0:Stability Assist
 1:Maneuver
@@ -125,23 +137,23 @@ int sasButtons[10];
 */
 
 // Warping & Time Control
-int warpLockSwitch;
-int pauseButton;
-int cancelWarpButton;
-int enablePhysWarpSwitch;
-int decreaseWarpButton;
-int increaseWarpButton;
+bool warpLockSwitch;
+bool pauseButton;
+bool cancelWarpButton;
+bool enablePhysWarpSwitch;
+bool decreaseWarpButton;
+bool increaseWarpButton;
 // Extras
-int extraButton1;
-int extraButton2;
+bool extraButton1;
+bool extraButton2;
 // View
-int cycleFocusButton;
-int hideUIButton;
-int screenshotButton;
-int mapFlightSwitch;
-int extIvaSwitch;
-int cycleCamModeButton;
-int resetCamButton;
+bool cycleFocusButton;
+bool hideUIButton;
+bool screenshotButton;
+bool mapFlightSwitch;
+bool extIvaSwitch;
+bool cycleCamModeButton;
+bool resetCamButton;
 
 #pragma region AnalogPins
 
@@ -170,7 +182,7 @@ const int THROTTLE_AXIS_PIN = A8;
 int rotXRaw, rotYRaw, rotZRaw;
 int transXRaw, transYRaw, transZRaw;
 // Joystick buttons
-bool rotButtonState, transButtonState;
+bool rotButton, transButton;
 // Throttle analog
 int throttleRaw;
 
@@ -190,6 +202,13 @@ const int SHIFT_OUT_B_CLOCK_PIN = 7;
 const int SHIFT_OUT_C_DATA_PIN = 8;
 const int SHIFT_OUT_C_LATCH_PIN = 9;
 const int SHIFT_OUT_C_CLOCK_PIN = 10;
+
+// Pins on registers out A
+int shiftOutA[64];
+// Pins on registers out B
+int shiftOutB[64];
+// Pins on registers out C
+int shiftOutC[32];
 
 // Power led
 bool pwrLed;
@@ -295,12 +314,6 @@ int targetVelocity;
 
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
-// Pins on registers out A
-int shiftOutA[64];
-// Pins on registers out B
-int shiftOutB[64];
-// Pins on registers out C
-int shiftOutC[32];
 
 // Text for heading LCD
 String headingTopTxt, headingBotTxt;
@@ -311,6 +324,7 @@ rotationMessage rotMsg;
 translationMessage transMsg;
 // Create new throttle msg
 throttleMessage throttleMsg;
+
 
 
 #pragma region Methods
@@ -346,9 +360,6 @@ void initIO()
     pinMode(SHIFT_OUT_C_LATCH_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_DATA_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_CLOCK_PIN, OUTPUT);
-
-    #pragma endregion
-
 }
 /// <summary>Records every input on the controller.</summary>
 void recordInputs()
@@ -362,12 +373,16 @@ void recordInputs()
     transZRaw = analogRead(TRANSLATION_Z_AXIS_PIN);
     throttleRaw = analogRead(THROTTLE_AXIS_PIN);
     // If button less then 50, then set to true, otherwise set false;
-    rotButtonState = analogRead(ROTATION_BUTTON_PIN) > 50 ? false : true;
-    transButtonState = analogRead(TRANSLATION_BUTTON_PIN) > 50 ? false : true;
+    rotButton = analogRead(ROTATION_BUTTON_PIN) > 50 ? false : true;
+    transButton = analogRead(TRANSLATION_BUTTON_PIN) > 50 ? false : true;
 
     // Digital VV
 
-
+    powerSwitch = (bool)digitalRead(POWER_SWITCH);
+    debugSwitch = (bool)digitalRead(DEBUG_MODE_SWITCH);
+    speakerEnableSwitch = (bool)digitalRead(SPEAKER_ENABLE_SWITCH);
+    stageViewSwitch = (bool)digitalRead(STAGE_VIEW_SWITCH);
+    verticalVelocitySwitch = (bool)digitalRead(VERTICAL_VELOCITY_SWITCH);
 }
 /// <summary>Set values to prepare them for being sent.</summary>
 void setOutputs()
@@ -404,6 +419,7 @@ void sendInputs()
     mySimpit.send(TRANSLATION_MESSAGE, transMsg);
     // Throttle
     mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
+
 }
 
 #pragma region Simpit
@@ -601,21 +617,19 @@ String calculateGap(String includedTxt, int idealLength)
 
 #pragma endregion
 
-#pragma region Digital
-
 void setOutputRegisters()
 {
     // Shift register out A
-    shiftOutA[0 ] = (int)sfLeds[0 ]; // A:0
-    shiftOutA[1 ] = (int)sfLeds[1 ]; // A:1
-    shiftOutA[2 ] = (int)sfLeds[2 ]; // A:2
-    shiftOutA[3 ] = (int)sfLeds[3 ]; // A:3
-    shiftOutA[4 ] = (int)sfLeds[4 ]; // A:4
-    shiftOutA[5 ] = (int)sfLeds[5 ]; // A:5
-    shiftOutA[6 ] = (int)sfLeds[6 ]; // A:6
-    shiftOutA[7 ] = (int)sfLeds[7 ]; // A:7
-    shiftOutA[8 ] = (int)sfLeds[8 ]; // B:0
-    shiftOutA[9 ] = (int)sfLeds[9 ]; // B:1
+    shiftOutA[0] = (int)sfLeds[0]; // A:0
+    shiftOutA[1] = (int)sfLeds[1]; // A:1
+    shiftOutA[2] = (int)sfLeds[2]; // A:2
+    shiftOutA[3] = (int)sfLeds[3]; // A:3
+    shiftOutA[4] = (int)sfLeds[4]; // A:4
+    shiftOutA[5] = (int)sfLeds[5]; // A:5
+    shiftOutA[6] = (int)sfLeds[6]; // A:6
+    shiftOutA[7] = (int)sfLeds[7]; // A:7
+    shiftOutA[8] = (int)sfLeds[8]; // B:0
+    shiftOutA[9] = (int)sfLeds[9]; // B:1
     shiftOutA[10] = (int)sfLeds[10]; // B:2
     shiftOutA[11] = (int)sfLeds[11]; // B:3
     shiftOutA[12] = (int)sfLeds[12]; // B:4
@@ -626,16 +640,16 @@ void setOutputRegisters()
     shiftOutA[17] = (int)sfLeds[17]; // C:1
     shiftOutA[18] = (int)sfLeds[18]; // C:2
     shiftOutA[19] = (int)sfLeds[19]; // C:3      
-    shiftOutA[20] = (int)lfLeds[0 ]; // C:4      
-    shiftOutA[21] = (int)lfLeds[1 ]; // C:5      
-    shiftOutA[22] = (int)lfLeds[2 ]; // C:6      
-    shiftOutA[23] = (int)lfLeds[3 ]; // C:7      
-    shiftOutA[24] = (int)lfLeds[4 ]; // D:0      
-    shiftOutA[25] = (int)lfLeds[5 ]; // D:1      
-    shiftOutA[26] = (int)lfLeds[6 ]; // D:2      
-    shiftOutA[27] = (int)lfLeds[7 ]; // D:3      
-    shiftOutA[28] = (int)lfLeds[8 ]; // D:4      
-    shiftOutA[29] = (int)lfLeds[9 ]; // D:5      
+    shiftOutA[20] = (int)lfLeds[0]; // C:4      
+    shiftOutA[21] = (int)lfLeds[1]; // C:5      
+    shiftOutA[22] = (int)lfLeds[2]; // C:6      
+    shiftOutA[23] = (int)lfLeds[3]; // C:7      
+    shiftOutA[24] = (int)lfLeds[4]; // D:0      
+    shiftOutA[25] = (int)lfLeds[5]; // D:1      
+    shiftOutA[26] = (int)lfLeds[6]; // D:2      
+    shiftOutA[27] = (int)lfLeds[7]; // D:3      
+    shiftOutA[28] = (int)lfLeds[8]; // D:4      
+    shiftOutA[29] = (int)lfLeds[9]; // D:5      
     shiftOutA[30] = (int)lfLeds[10]; // D:6      
     shiftOutA[31] = (int)lfLeds[11]; // D:7      
     shiftOutA[32] = (int)lfLeds[12]; // E:0      
@@ -646,16 +660,16 @@ void setOutputRegisters()
     shiftOutA[37] = (int)lfLeds[17]; // E:5      
     shiftOutA[38] = (int)lfLeds[18]; // E:6      
     shiftOutA[39] = (int)lfLeds[19]; // E:7      
-    shiftOutA[40] = (int)oxLeds[0 ]; // F:0      
-    shiftOutA[41] = (int)oxLeds[1 ]; // F:1      
-    shiftOutA[42] = (int)oxLeds[2 ]; // F:2      
-    shiftOutA[43] = (int)oxLeds[3 ]; // F:3      
-    shiftOutA[44] = (int)oxLeds[4 ]; // F:4      
-    shiftOutA[45] = (int)oxLeds[5 ]; // F:5      
-    shiftOutA[46] = (int)oxLeds[6 ]; // F:6      
-    shiftOutA[47] = (int)oxLeds[7 ]; // F:7      
-    shiftOutA[48] = (int)oxLeds[8 ]; // G:0      
-    shiftOutA[49] = (int)oxLeds[9 ]; // G:1      
+    shiftOutA[40] = (int)oxLeds[0]; // F:0      
+    shiftOutA[41] = (int)oxLeds[1]; // F:1      
+    shiftOutA[42] = (int)oxLeds[2]; // F:2      
+    shiftOutA[43] = (int)oxLeds[3]; // F:3      
+    shiftOutA[44] = (int)oxLeds[4]; // F:4      
+    shiftOutA[45] = (int)oxLeds[5]; // F:5      
+    shiftOutA[46] = (int)oxLeds[6]; // F:6      
+    shiftOutA[47] = (int)oxLeds[7]; // F:7      
+    shiftOutA[48] = (int)oxLeds[8]; // G:0      
+    shiftOutA[49] = (int)oxLeds[9]; // G:1      
     shiftOutA[50] = (int)oxLeds[10]; // G:2      
     shiftOutA[51] = (int)oxLeds[11]; // G:3      
     shiftOutA[52] = (int)oxLeds[12]; // G:4      
@@ -671,32 +685,32 @@ void setOutputRegisters()
     shiftOutA[62] = (int)mpLeds[2]; // H:6
     shiftOutA[63] = (int)mpLeds[3]; // H:7
     // Shift register out B
-    shiftOutB[0 ] = (int)mpLeds[4 ]; // A:0
-    shiftOutB[1 ] = (int)mpLeds[5 ]; // A:1
-    shiftOutB[2 ] = (int)mpLeds[6 ]; // A:2
-    shiftOutB[3 ] = (int)mpLeds[7 ]; // A:3
-    shiftOutB[4 ] = (int)mpLeds[8 ]; // A:4
-    shiftOutB[5 ] = (int)mpLeds[9 ]; // A:5
-    shiftOutB[6 ] = (int)mpLeds[10]; // A:6
-    shiftOutB[7 ] = (int)mpLeds[11]; // A:7
-    shiftOutB[8 ] = (int)mpLeds[12]; // B:0
-    shiftOutB[9 ] = (int)mpLeds[13]; // B:1
+    shiftOutB[0] = (int)mpLeds[4]; // A:0
+    shiftOutB[1] = (int)mpLeds[5]; // A:1
+    shiftOutB[2] = (int)mpLeds[6]; // A:2
+    shiftOutB[3] = (int)mpLeds[7]; // A:3
+    shiftOutB[4] = (int)mpLeds[8]; // A:4
+    shiftOutB[5] = (int)mpLeds[9]; // A:5
+    shiftOutB[6] = (int)mpLeds[10]; // A:6
+    shiftOutB[7] = (int)mpLeds[11]; // A:7
+    shiftOutB[8] = (int)mpLeds[12]; // B:0
+    shiftOutB[9] = (int)mpLeds[13]; // B:1
     shiftOutB[10] = (int)mpLeds[14]; // B:2
     shiftOutB[11] = (int)mpLeds[15]; // B:3
     shiftOutB[12] = (int)mpLeds[16]; // B:4
     shiftOutB[13] = (int)mpLeds[17]; // B:5
     shiftOutB[14] = (int)mpLeds[18]; // B:6
     shiftOutB[15] = (int)mpLeds[19]; // B:7
-    shiftOutB[16] = (int)ecLeds[0 ]; // C:0
-    shiftOutB[17] = (int)ecLeds[1 ]; // C:1
-    shiftOutB[18] = (int)ecLeds[2 ]; // C:2
-    shiftOutB[19] = (int)ecLeds[3 ]; // C:3      
-    shiftOutB[20] = (int)ecLeds[4 ]; // C:4      
-    shiftOutB[21] = (int)ecLeds[5 ]; // C:5      
-    shiftOutB[22] = (int)ecLeds[6 ]; // C:6      
-    shiftOutB[23] = (int)ecLeds[7 ]; // C:7      
-    shiftOutB[24] = (int)ecLeds[8 ]; // D:0      
-    shiftOutB[25] = (int)ecLeds[9 ]; // D:1      
+    shiftOutB[16] = (int)ecLeds[0]; // C:0
+    shiftOutB[17] = (int)ecLeds[1]; // C:1
+    shiftOutB[18] = (int)ecLeds[2]; // C:2
+    shiftOutB[19] = (int)ecLeds[3]; // C:3      
+    shiftOutB[20] = (int)ecLeds[4]; // C:4      
+    shiftOutB[21] = (int)ecLeds[5]; // C:5      
+    shiftOutB[22] = (int)ecLeds[6]; // C:6      
+    shiftOutB[23] = (int)ecLeds[7]; // C:7      
+    shiftOutB[24] = (int)ecLeds[8]; // D:0      
+    shiftOutB[25] = (int)ecLeds[9]; // D:1      
     shiftOutB[26] = (int)ecLeds[10]; // D:2      
     shiftOutB[27] = (int)ecLeds[11]; // D:3      
     shiftOutB[28] = (int)ecLeds[12]; // D:4      
@@ -707,70 +721,68 @@ void setOutputRegisters()
     shiftOutB[33] = (int)ecLeds[17]; // E:1      
     shiftOutB[34] = (int)ecLeds[18]; // E:2      
     shiftOutB[35] = (int)ecLeds[19]; // E:3      
-    shiftOutB[36]; // E:4      
-    shiftOutB[37]; // E:5      
-    shiftOutB[38]; // E:6      
-    shiftOutB[39]; // E:7      
-    shiftOutB[40]; // F:0      
-    shiftOutB[41]; // F:1      
-    shiftOutB[42]; // F:2      
-    shiftOutB[43]; // F:3      
-    shiftOutB[44]; // F:4      
-    shiftOutB[45]; // F:5      
-    shiftOutB[46]; // F:6      
-    shiftOutB[47]; // F:7      
-    shiftOutB[48]; // G:0      
-    shiftOutB[49]; // G:1      
-    shiftOutB[50]; // G:2      
-    shiftOutB[51]; // G:3      
-    shiftOutB[52]; // G:4      
-    shiftOutB[53]; // G:5      
-    shiftOutB[54]; // G:6      
-    shiftOutB[55]; // G:7      
-    shiftOutB[56]; // H:0      
-    shiftOutB[57]; // H:1      
-    shiftOutB[58]; // H:2      
-    shiftOutB[59]; // H:3      
-    shiftOutB[60]; // H:4      
-    shiftOutB[61]; // H:5      
-    shiftOutB[62]; // H:6
-    shiftOutB[63]; // H:7
+    shiftOutB[36] = (int)pwrLed; // E:4      
+    shiftOutB[37] = (int)warningLeds[0]; // E:5      
+    shiftOutB[38] = (int)warningLeds[1]; // E:6      
+    shiftOutB[39] = (int)warningLeds[2]; // E:7      
+    shiftOutB[40] = (int)warningLeds[3]; // F:0      
+    shiftOutB[41] = (int)warningLeds[4]; // F:1      
+    shiftOutB[42] = (int)warningLeds[5]; // F:2      
+    shiftOutB[43] = (int)warningLeds[6]; // F:3      
+    shiftOutB[44] = (int)warningLeds[7]; // F:4      
+    shiftOutB[45] = (int)warningLeds[8]; // F:5      
+    shiftOutB[46] = (int)warningLeds[9]; // F:6      
+    shiftOutB[47] = (int)stageLed; // F:7      
+    shiftOutB[48] = (int)stageLockLed; // G:0      
+    shiftOutB[49] = (int)abortLed; // G:1      
+    shiftOutB[50] = (int)abortLockLed; // G:2      
+    shiftOutB[51] = (int)agLeds[0]; // G:3      
+    shiftOutB[52] = (int)agLeds[1]; // G:4      
+    shiftOutB[53] = (int)agLeds[2]; // G:5      
+    shiftOutB[54] = (int)agLeds[3]; // G:6      
+    shiftOutB[55] = (int)agLeds[4]; // G:7      
+    shiftOutB[56] = (int)agLeds[5]; // H:0      
+    shiftOutB[57] = (int)agLeds[6]; // H:1      
+    shiftOutB[58] = (int)agLeds[7]; // H:2      
+    shiftOutB[59] = (int)agLeds[8]; // H:3      
+    shiftOutB[60] = (int)agLeds[9]; // H:4      
+    shiftOutB[61] = (int)dockingModeLed; // H:5      
+    shiftOutB[62] = (int)PercisionModeLed; // H:6
+    shiftOutB[63] = (int)lightsLed; // H:7
     // Shift register out C
-    shiftOutC[0 ]; // A:0
-    shiftOutC[1 ]; // A:1
-    shiftOutC[2 ]; // A:2
-    shiftOutC[3 ]; // A:3
-    shiftOutC[4 ]; // A:4
-    shiftOutC[5 ]; // A:5
-    shiftOutC[6 ]; // A:6
-    shiftOutC[7 ]; // A:7
-    shiftOutC[8 ]; // B:0
-    shiftOutC[9 ]; // B:1
-    shiftOutC[10]; // B:2
-    shiftOutC[11]; // B:3
-    shiftOutC[12]; // B:4
-    shiftOutC[13]; // B:5
-    shiftOutC[14]; // B:6
-    shiftOutC[15]; // B:7
-    shiftOutC[16]; // C:0
-    shiftOutC[17]; // C:1
-    shiftOutC[18]; // C:2
-    shiftOutC[19]; // C:3      
-    shiftOutC[20]; // C:4      
-    shiftOutC[21]; // C:5      
-    shiftOutC[22]; // C:6      
-    shiftOutC[23]; // C:7      
-    shiftOutC[24]; // D:0      
-    shiftOutC[25]; // D:1      
-    shiftOutC[26]; // D:2      
-    shiftOutC[27]; // D:3      
-    shiftOutC[28]; // D:4      
-    shiftOutC[29]; // D:5      
-    shiftOutC[30]; // D:6      
-    shiftOutC[31]; // D:7
+    shiftOutC[0] = (int)gearLed; // A:0
+    shiftOutC[1] = (int)brakeLed; // A:1
+    shiftOutC[2] = (int)sasLed; // A:2
+    shiftOutC[3] = (int)rcsLed; // A:3
+    shiftOutC[4] = (int)sasModeLeds[0]; // A:4
+    shiftOutC[5] = (int)sasModeLeds[1]; // A:5
+    shiftOutC[6] = (int)sasModeLeds[2]; // A:6
+    shiftOutC[7] = (int)sasModeLeds[3]; // A:7
+    shiftOutC[8] = (int)sasModeLeds[4]; // B:0
+    shiftOutC[9] = (int)sasModeLeds[5]; // B:1
+    shiftOutC[10] = (int)sasModeLeds[6]; // B:2
+    shiftOutC[11] = (int)sasModeLeds[7]; // B:3
+    shiftOutC[12] = (int)sasModeLeds[8]; // B:4
+    shiftOutC[13] = (int)sasModeLeds[9]; // B:5
+    shiftOutC[14] = 0; // B:6
+    shiftOutC[15] = 0; // B:7
+    shiftOutC[16] = 0; // C:0
+    shiftOutC[17] = 0; // C:1
+    shiftOutC[18] = 0; // C:2
+    shiftOutC[19] = 0; // C:3      
+    shiftOutC[20] = 0; // C:4      
+    shiftOutC[21] = 0; // C:5      
+    shiftOutC[22] = 0; // C:6      
+    shiftOutC[23] = 0; // C:7      
+    shiftOutC[24] = 0; // D:0      
+    shiftOutC[25] = 0; // D:1      
+    shiftOutC[26] = 0; // D:2      
+    shiftOutC[27] = 0; // D:3      
+    shiftOutC[28] = 0; // D:4      
+    shiftOutC[29] = 0; // D:5      
+    shiftOutC[30] = 0; // D:6      
+    shiftOutC[31] = 0; // D:7
 }
-
-#pragma endregion
 
 #pragma endregion
 
