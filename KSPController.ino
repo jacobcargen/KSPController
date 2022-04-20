@@ -19,29 +19,29 @@ KerbalSimpit mySimpit(Serial);
 
 #pragma region InputPinsStates
 
-const int POWER_SWITCH = 53;
+const int POWER_SWITCH_PIN = 53;
 bool powerSwitch;
-const int DEBUG_MODE_SWITCH = 52;
+const int DEBUG_MODE_SWITCH_PIN = 52;
 bool debugSwitch;
-const int SPEAKER_ENABLE_SWITCH = 51;
+const int SPEAKER_ENABLE_SWITCH_PIN = 51;
 bool speakerEnableSwitch;
 // Display Controls
-const int STAGE_VIEW_SWITCH = 50;
+const int STAGE_VIEW_SWITCH_PIN = 50;
 bool stageViewSwitch;
-const int VERTICAL_VELOCITY_SWITCH = 49;
+const int VERTICAL_VELOCITY_SWITCH_PIN = 49;
 bool verticalVelocitySwitch;
-const int CYCLE_REFERENCE_MODE_BUTTON = 48;
+const int CYCLE_REFERENCE_MODE_BUTTON_PIN = 48;
 bool cycleRefModeButton;
-const int ALT_RADAR_MODE_SWITCH = 47;
+const int ALT_RADAR_MODE_SWITCH_PIN = 47;
 bool altRadarModeSwitch;
 // Stage & Abort
-const int STAGE_BUTTON = 46;
+const int STAGE_BUTTON_PIN = 46;
 bool stageButton;
-const int STAGE_LOCK_SWITCH = 45;
+const int STAGE_LOCK_SWITCH_PIN = 45;
 bool stageLockSwitch;
-const int ABORT_BUTTON = 44;
+const int ABORT_BUTTON_PIN = 44;
 bool abortButton;
-const int ABORT_LOCK_SWITCH = 43;
+const int ABORT_LOCK_SWITCH_PIN = 43;
 bool abortLockSwitch;
 // Info Modes(1-12)
 bool infoModes[12];
@@ -210,6 +210,9 @@ int shiftOutB[64];
 // Pins on registers out C
 int shiftOutC[32];
 
+int shiftInA[64];
+int shiftInB[16];
+
 // Power led
 bool pwrLed;
 // Warings leds
@@ -334,17 +337,17 @@ void initIO()
 {
     // INPUTS \\
 
-    pinMode(POWER_SWITCH, INPUT);
-    pinMode(DEBUG_MODE_SWITCH, INPUT);
-    pinMode(SPEAKER_ENABLE_SWITCH, INPUT);
-    pinMode(STAGE_VIEW_SWITCH, INPUT);
-    pinMode(VERTICAL_VELOCITY_SWITCH, INPUT);
-    pinMode(CYCLE_REFERENCE_MODE_BUTTON, INPUT);
-    pinMode(ALT_RADAR_MODE_SWITCH, INPUT);
-    pinMode(STAGE_BUTTON, INPUT);
-    pinMode(STAGE_LOCK_SWITCH, INPUT);
-    pinMode(ABORT_BUTTON, INPUT);
-    pinMode(ABORT_LOCK_SWITCH, INPUT);
+    pinMode(POWER_SWITCH_PIN, INPUT);
+    pinMode(DEBUG_MODE_SWITCH_PIN, INPUT);
+    pinMode(SPEAKER_ENABLE_SWITCH_PIN, INPUT);
+    pinMode(STAGE_VIEW_SWITCH_PIN, INPUT);
+    pinMode(VERTICAL_VELOCITY_SWITCH_PIN, INPUT);
+    pinMode(CYCLE_REFERENCE_MODE_BUTTON_PIN, INPUT);
+    pinMode(ALT_RADAR_MODE_SWITCH_PIN, INPUT);
+    pinMode(STAGE_BUTTON_PIN, INPUT);
+    pinMode(STAGE_LOCK_SWITCH_PIN, INPUT);
+    pinMode(ABORT_BUTTON_PIN, INPUT);
+    pinMode(ABORT_LOCK_SWITCH_PIN, INPUT);
 
     // OUTPUTS \\
 
@@ -361,8 +364,9 @@ void initIO()
     pinMode(SHIFT_OUT_C_DATA_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_CLOCK_PIN, OUTPUT);
 }
+
 /// <summary>Records every input on the controller.</summary>
-void recordInputs()
+void getInputs()
 {
     // Get the raw axis values
     rotXRaw = analogRead(ROTATION_X_AXIS_PIN);
@@ -378,12 +382,35 @@ void recordInputs()
 
     // Digital VV
 
-    powerSwitch = (bool)digitalRead(POWER_SWITCH);
-    debugSwitch = (bool)digitalRead(DEBUG_MODE_SWITCH);
-    speakerEnableSwitch = (bool)digitalRead(SPEAKER_ENABLE_SWITCH);
-    stageViewSwitch = (bool)digitalRead(STAGE_VIEW_SWITCH);
-    verticalVelocitySwitch = (bool)digitalRead(VERTICAL_VELOCITY_SWITCH);
+    powerSwitch = (bool)digitalRead(POWER_SWITCH_PIN);
+    debugSwitch = (bool)digitalRead(DEBUG_MODE_SWITCH_PIN);
+    speakerEnableSwitch = (bool)digitalRead(SPEAKER_ENABLE_SWITCH_PIN);
+    stageViewSwitch = (bool)digitalRead(STAGE_VIEW_SWITCH_PIN);
+    verticalVelocitySwitch = (bool)digitalRead(VERTICAL_VELOCITY_SWITCH_PIN);
+    stageButton = (bool)digitalRead(STAGE_BUTTON_PIN);
+    stageLockSwitch = (bool)digitalRead(STAGE_LOCK_SWITCH_PIN);
+    abortButton = (bool)digitalRead(ABORT_BUTTON_PIN);
+    abortLockSwitch = (bool)digitalRead(ABORT_LOCK_SWITCH_PIN);
+
 }
+/// <summary>Set input values before sending them to ksp.</summary>
+void setInputs()
+{
+    setJoystickValues();
+    setThrottleValues();
+}
+/// <summary>Send input data to ksp.</summary>
+void sendInputs()
+{
+    // Rotation
+    mySimpit.send(ROTATION_MESSAGE, rotMsg);
+    // Translation
+    mySimpit.send(TRANSLATION_MESSAGE, transMsg);
+    // Throttle
+    mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
+
+}
+
 /// <summary>Set values to prepare them for being sent.</summary>
 void setOutputs()
 {
@@ -403,23 +430,6 @@ void sendOutputs()
     sendShiftOut(shiftOutC, SHIFT_OUT_C_DATA_PIN, SHIFT_OUT_C_LATCH_PIN, SHIFT_OUT_C_CLOCK_PIN);
     // Heading LCD
     sendHeadingLCD();
-}
-/// <summary>Set input values before sending them to ksp.</summary>
-void setInputs()
-{
-    setJoystickValues();
-    setThrottleValues();
-}
-/// <summary>Send input data to ksp.</summary>
-void sendInputs()
-{
-    // Rotation
-    mySimpit.send(ROTATION_MESSAGE, rotMsg);
-    // Translation
-    mySimpit.send(TRANSLATION_MESSAGE, transMsg);
-    // Throttle
-    mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
-
 }
 
 #pragma region Simpit
@@ -478,6 +488,15 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 
 #pragma endregion
 
+#pragma region Getting
+
+unsigned long[] getShiftIn(int dataPin, int latchPin, int clockPin)
+{
+
+}
+
+#pragma endregion
+
 #pragma region Setting
 ////////////// INPUTS  ////////////////
 
@@ -521,6 +540,91 @@ int16_t smoothAndMapAxis(int raw)
 }
 
 #pragma endregion
+
+void getInputRegisters()
+{
+    var = (bool)shiftInA[0];
+     = (bool)shiftInA[1];
+     = (bool)shiftInA[2];
+     = (bool)shiftInA[3];
+     = (bool)shiftInA[4];
+     = (bool)shiftInA[5];
+     = (bool)shiftInA[6];
+     = (bool)shiftInA[7];
+     = (bool)shiftInA[8];
+     = (bool)shiftInA[9];
+     = (bool)shiftInA[10];
+     = (bool)shiftInA[11];
+     = (bool)shiftInA[12];
+     = (bool)shiftInA[13];
+     = (bool)shiftInA[14];
+     = (bool)shiftInA[15];
+     = (bool)shiftInA[16];
+     = (bool)shiftInA[17];
+     = (bool)shiftInA[18];
+     = (bool)shiftInA[19];
+     = (bool)shiftInA[20];
+     = (bool)shiftInA[21];
+     = (bool)shiftInA[22];
+     = (bool)shiftInA[23];
+     = (bool)shiftInA[24];
+     = (bool)shiftInA[25];
+     = (bool)shiftInA[26];
+     = (bool)shiftInA[27];
+     = (bool)shiftInA[28];
+     = (bool)shiftInA[29];
+     = (bool)shiftInA[30];
+     = (bool)shiftInA[31];
+     = (bool)shiftInA[32];
+     = (bool)shiftInA[33];
+     = (bool)shiftInA[34];
+     = (bool)shiftInA[35];
+     = (bool)shiftInA[36];
+     = (bool)shiftInA[37];
+     = (bool)shiftInA[38];
+     = (bool)shiftInA[39];
+     = (bool)shiftInA[40];
+     = (bool)shiftInA[41];
+     = (bool)shiftInA[42];
+     = (bool)shiftInA[43];
+     = (bool)shiftInA[44];
+     = (bool)shiftInA[45];
+     = (bool)shiftInA[46];
+     = (bool)shiftInA[47];
+     = (bool)shiftInA[48];
+     = (bool)shiftInA[49];
+     = (bool)shiftInA[50];
+     = (bool)shiftInA[51];
+     = (bool)shiftInA[52];
+     = (bool)shiftInA[53];
+     = (bool)shiftInA[54];
+     = (bool)shiftInA[55];
+     = (bool)shiftInA[56];
+     = (bool)shiftInA[57];
+     = (bool)shiftInA[58];
+     = (bool)shiftInA[59];
+     = (bool)shiftInA[60];
+     = (bool)shiftInA[61];
+     = (bool)shiftInA[62];
+     = (bool)shiftInA[63];
+
+     = (bool)shiftInB[0];
+     = (bool)shiftInB[1];
+     = (bool)shiftInB[2];
+     = (bool)shiftInB[3];
+     = (bool)shiftInB[4];
+     = (bool)shiftInB[5];
+     = (bool)shiftInB[6];
+     = (bool)shiftInB[7];
+     = (bool)shiftInB[8];
+     = (bool)shiftInB[9];
+     = (bool)shiftInB[10];
+     = (bool)shiftInB[11];
+     = (bool)shiftInB[12];
+     = (bool)shiftInB[13];
+     = (bool)shiftInB[14];
+     = (bool)shiftInB[15];
+}
 
 ////////////// OUTPUTS ////////////////
 
@@ -880,7 +984,7 @@ void loop()
     // Update simpit
     mySimpit.update();
     // Record analog inputs
-    recordInputs();
+    getInputs();
     // Set input values
     setInputs();
     // Set outputs
