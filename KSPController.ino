@@ -144,6 +144,7 @@ bool enablePhysWarpSwitch;
 bool decreaseWarpButton;
 bool increaseWarpButton;
 // Extras
+const int EXTRA_BUTTON_1_PIN = 42;
 bool extraButton1;
 bool extraButton2;
 // View
@@ -348,6 +349,7 @@ void initIO()
     pinMode(STAGE_LOCK_SWITCH_PIN, INPUT);
     pinMode(ABORT_BUTTON_PIN, INPUT);
     pinMode(ABORT_LOCK_SWITCH_PIN, INPUT);
+    pinMode(EXTRA_BUTTON_1_PIN, INPUT);
 
     // OUTPUTS \\
 
@@ -381,7 +383,7 @@ void getInputs()
     transButton = analogRead(TRANSLATION_BUTTON_PIN) > 50 ? false : true;
 
     // Digital VV
-
+    // Booleans vars
     powerSwitch = (bool)digitalRead(POWER_SWITCH_PIN);
     debugSwitch = (bool)digitalRead(DEBUG_MODE_SWITCH_PIN);
     speakerEnableSwitch = (bool)digitalRead(SPEAKER_ENABLE_SWITCH_PIN);
@@ -391,6 +393,7 @@ void getInputs()
     stageLockSwitch = (bool)digitalRead(STAGE_LOCK_SWITCH_PIN);
     abortButton = (bool)digitalRead(ABORT_BUTTON_PIN);
     abortLockSwitch = (bool)digitalRead(ABORT_LOCK_SWITCH_PIN);
+    extraButton1 = (bool)digitalRead(EXTRA_BUTTON_1_PIN);
 
 }
 /// <summary>Set input values before sending them to ksp.</summary>
@@ -435,55 +438,12 @@ void sendOutputs()
 #pragma region Simpit
 
 /// <summary>Register all the needed channels for receiving simpit messages.</summary>
-void registerChannels()
+void registerSimpitChannels()
 {
     mySimpit.registerChannel(ALTITUDE_MESSAGE);
     mySimpit.registerChannel(ROTATION_DATA);
     mySimpit.registerChannel(VELOCITY_MESSAGE);
     mySimpit.registerChannel(SOI_MESSAGE);
-}
-/// <summary>Simpit messages from ksp are received here.</summary>
-void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
-{
-    switch (messageType)
-    {
-        case ROTATION_DATA:
-            if (msgSize == sizeof(vesselPointingMessage))
-            {
-                vesselPointingMessage vpm;
-                vpm = parseMessage<vesselPointingMessage>(msg);
-                heading = vpm.heading;
-                pitch = vpm.pitch;
-                roll = vpm.roll;
-            }
-            break;
-        case VELOCITY_MESSAGE:
-            if (msgSize == sizeof(velocityMessage))
-            {
-                velocityMessage vm;
-                vm = parseMessage<velocityMessage>(msg);
-                surfaceVelocity = vm.surface;
-                orbitalVelocity = vm.orbital;
-                verticalVelocity = vm.vertical;
-            }
-            break;
-        case TARGETINFO_MESSAGE:
-            if (msgSize == sizeof(targetMessage))
-            {
-                targetMessage tm;
-                tm = parseMessage<targetMessage>(msg);
-                targetVelocity = tm.velocity;
-            }
-            break;
-        case SOI_MESSAGE: // WIP
-            soi = (char*)msg;
-            //soi[msgSize] = '\0'; 
-            soi[soi.length()] = '\0';
-            mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
-            break;
-        default:
-            break;
-    }
 }
 
 #pragma endregion
@@ -497,6 +457,50 @@ void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int la
     // Get the values
     shiftInA;
     shiftInB;
+}
+
+/// <summary>Simpit messages from ksp are received here.</summary>
+void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
+{
+    switch (messageType)
+    {
+    case ROTATION_DATA:
+        if (msgSize == sizeof(vesselPointingMessage))
+        {
+            vesselPointingMessage vpm;
+            vpm = parseMessage<vesselPointingMessage>(msg);
+            heading = vpm.heading;
+            pitch = vpm.pitch;
+            roll = vpm.roll;
+        }
+        break;
+    case VELOCITY_MESSAGE:
+        if (msgSize == sizeof(velocityMessage))
+        {
+            velocityMessage vm;
+            vm = parseMessage<velocityMessage>(msg);
+            surfaceVelocity = vm.surface;
+            orbitalVelocity = vm.orbital;
+            verticalVelocity = vm.vertical;
+        }
+        break;
+    case TARGETINFO_MESSAGE:
+        if (msgSize == sizeof(targetMessage))
+        {
+            targetMessage tm;
+            tm = parseMessage<targetMessage>(msg);
+            targetVelocity = tm.velocity;
+        }
+        break;
+    case SOI_MESSAGE: // WIP
+        soi = (char*)msg;
+        //soi[msgSize] = '\0'; 
+        soi[soi.length()] = '\0';
+        mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
+        break;
+    default:
+        break;
+    }
 }
 
 #pragma endregion
@@ -547,87 +551,88 @@ int16_t smoothAndMapAxis(int raw)
 
 void getInputRegisters()
 {
-     = (bool)shiftInA[0]; // A:0
-     = (bool)shiftInA[1]; // A:1
-     = (bool)shiftInA[2]; // A:2
-     = (bool)shiftInA[3]; // A:3
-     = (bool)shiftInA[4]; // A:4
-     = (bool)shiftInA[5]; // A:5
-     = (bool)shiftInA[6]; // A:6
-     = (bool)shiftInA[7]; // A:7
-     = (bool)shiftInA[8]; // B:0
-     = (bool)shiftInA[9]; // B:1
-     = (bool)shiftInA[10]; // B:2
-     = (bool)shiftInA[11]; // B:3
-     = (bool)shiftInA[12]; // B:4
-     = (bool)shiftInA[13]; // B:5
-     = (bool)shiftInA[14]; // B:6
-     = (bool)shiftInA[15]; // B:7
-     = (bool)shiftInA[16]; // C:0
-     = (bool)shiftInA[17]; // C:1
-     = (bool)shiftInA[18]; // C:2
-     = (bool)shiftInA[19]; // C:3
-     = (bool)shiftInA[20]; // C:4
-     = (bool)shiftInA[21]; // C:5
-     = (bool)shiftInA[22]; // C:6
-     = (bool)shiftInA[23]; // C:7
-     = (bool)shiftInA[24]; // D:0
-     = (bool)shiftInA[25]; // D:1
-     = (bool)shiftInA[26]; // D:2
-     = (bool)shiftInA[27]; // D:3
-     = (bool)shiftInA[28]; // D:4
-     = (bool)shiftInA[29]; // D:5
-     = (bool)shiftInA[30]; // D:6
-     = (bool)shiftInA[31]; // D:7
-     = (bool)shiftInA[32]; // E:0
-     = (bool)shiftInA[33]; // E:1
-     = (bool)shiftInA[34]; // E:2
-     = (bool)shiftInA[35]; // E:3
-     = (bool)shiftInA[36]; // E:4
-     = (bool)shiftInA[37]; // E:5
-     = (bool)shiftInA[38]; // E:6
-     = (bool)shiftInA[39]; // E:7
-     = (bool)shiftInA[40]; // F:0
-     = (bool)shiftInA[41]; // F:1
-     = (bool)shiftInA[42]; // F:2
-     = (bool)shiftInA[43]; // F:3
-     = (bool)shiftInA[44]; // F:4
-     = (bool)shiftInA[45]; // F:5
-     = (bool)shiftInA[46]; // F:6
-     = (bool)shiftInA[47]; // F:7
-     = (bool)shiftInA[48]; // G:0
-     = (bool)shiftInA[49]; // G:1
-     = (bool)shiftInA[50]; // G:2
-     = (bool)shiftInA[51]; // G:3
-     = (bool)shiftInA[52]; // G:4
-     = (bool)shiftInA[53]; // G:5
-     = (bool)shiftInA[54]; // G:6
-     = (bool)shiftInA[55]; // G:7
-     = (bool)shiftInA[56]; // H:0
-     = (bool)shiftInA[57]; // H:1
-     = (bool)shiftInA[58]; // H:2
-     = (bool)shiftInA[59]; // H:3
-     = (bool)shiftInA[60]; // H:4
-     = (bool)shiftInA[61]; // H:5
-     = (bool)shiftInA[62]; // H:6
-     = (bool)shiftInA[63]; // H:7
-
-     = (bool)shiftInB[0];
-     = (bool)shiftInB[1];
-     = (bool)shiftInB[2];
-     = (bool)shiftInB[3];
-     = (bool)shiftInB[4];
-     = (bool)shiftInB[5];
-     = (bool)shiftInB[6];
-     = (bool)shiftInB[7];
-     = (bool)shiftInB[8];
-     = (bool)shiftInB[9];
-     = (bool)shiftInB[10];
-     = (bool)shiftInB[11];
-     = (bool)shiftInB[12];
-     = (bool)shiftInB[13];
-     = (bool)shiftInB[14];
-     = (bool)shiftInB[15];
+    // Shift registers in A
+    infoModes[0] = (bool)shiftInA[0]; // A:0
+    infoModes[1] = (bool)shiftInA[1]; // A:1
+    infoModes[2] = (bool)shiftInA[2]; // A:2
+    infoModes[3] = (bool)shiftInA[3]; // A:3
+    infoModes[4] = (bool)shiftInA[4]; // A:4
+    infoModes[5] = (bool)shiftInA[5]; // A:5
+    infoModes[6] = (bool)shiftInA[6]; // A:6
+    infoModes[7] = (bool)shiftInA[7]; // A:7
+    infoModes[8] = (bool)shiftInA[8]; // B:0
+    infoModes[9] = (bool)shiftInA[9]; // B:1
+    infoModes[10] = (bool)shiftInA[10]; // B:2
+    infoModes[11] = (bool)shiftInA[11]; // B:3
+    dirModes[0] = (bool)shiftInA[12]; // B:4
+    dirModes[1] = (bool)shiftInA[13]; // B:5
+    dirModes[2] = (bool)shiftInA[14]; // B:6
+    dirModes[3] = (bool)shiftInA[15]; // B:7
+    dirModes[4] = (bool)shiftInA[16]; // C:0
+    dirModes[5] = (bool)shiftInA[17]; // C:1
+    dirModes[6] = (bool)shiftInA[18]; // C:2
+    dirModes[7] = (bool)shiftInA[19]; // C:3
+    dirModes[8] = (bool)shiftInA[20]; // C:4
+    dirModes[9] = (bool)shiftInA[21]; // C:5
+    dirModes[10] = (bool)shiftInA[22]; // C:6
+    dirModes[11] = (bool)shiftInA[23]; // C:7
+    warnButtons[0] = (bool)shiftInA[24]; // D:0
+    warnButtons[1] = (bool)shiftInA[25]; // D:1
+    warnButtons[2] = (bool)shiftInA[26]; // D:2
+    warnButtons[3] = (bool)shiftInA[27]; // D:3
+    warnButtons[4] = (bool)shiftInA[28]; // D:4
+    warnButtons[5] = (bool)shiftInA[29]; // D:5
+    warnButtons[6] = (bool)shiftInA[30]; // D:6
+    warnButtons[7] = (bool)shiftInA[31]; // D:7
+    warnButtons[8] = (bool)shiftInA[32]; // E:0
+    warnButtons[9] = (bool)shiftInA[33]; // E:1
+    agButtons[0] = (bool)shiftInA[34]; // E:2
+    agButtons[1] = (bool)shiftInA[35]; // E:3
+    agButtons[2] = (bool)shiftInA[36]; // E:4
+    agButtons[3] = (bool)shiftInA[37]; // E:5
+    agButtons[4] = (bool)shiftInA[38]; // E:6
+    agButtons[5] = (bool)shiftInA[39]; // E:7
+    agButtons[6] = (bool)shiftInA[40]; // F:0
+    agButtons[7] = (bool)shiftInA[41]; // F:1
+    agButtons[8] = (bool)shiftInA[42]; // F:2
+    agButtons[9] = (bool)shiftInA[43]; // F:3
+    dockingModeSwitch = (bool)shiftInA[44]; // F:4
+    percisionModeSwitch = (bool)shiftInA[45]; // F:5
+    gearSwitch = (bool)shiftInA[46]; // F:6
+    lightsSwitch = (bool)shiftInA[47]; // F:7
+    brakeSwitch = (bool)shiftInA[48]; // G:0
+    sasSwitch = (bool)shiftInA[49]; // G:1
+    rcsSwitch = (bool)shiftInA[50]; // G:2
+    throttleLockSwitch = (bool)shiftInA[51]; // G:3
+    setTrimTranslationButton = (bool)shiftInA[52]; // G:4
+    resetTrimTranslationButton = (bool)shiftInA[53]; // G:5
+    setTrimRotationButton = (bool)shiftInA[54]; // G:6
+    resetTrimRotationButton = (bool)shiftInA[55]; // G:7
+    sasButtons[0] = (bool)shiftInA[56]; // H:0
+    sasButtons[1] = (bool)shiftInA[57]; // H:1
+    sasButtons[2] = (bool)shiftInA[58]; // H:2
+    sasButtons[3] = (bool)shiftInA[59]; // H:3
+    sasButtons[4] = (bool)shiftInA[60]; // H:4
+    sasButtons[5] = (bool)shiftInA[61]; // H:5
+    sasButtons[6] = (bool)shiftInA[62]; // H:6
+    sasButtons[7] = (bool)shiftInA[63]; // H:7
+    // Shift registers in B
+    sasButtons[8] = (bool)shiftInB[0]; // A:0
+    sasButtons[9] = (bool)shiftInB[1]; // A:1
+    warpLockSwitch = (bool)shiftInB[2]; // A:2
+    pauseButton = (bool)shiftInB[3]; // A:3
+    cancelWarpButton = (bool)shiftInB[4]; // A:4
+    enablePhysWarpSwitch = (bool)shiftInB[5]; // A:5
+    decreaseWarpButton = (bool)shiftInB[6]; // A:6
+    increaseWarpButton = (bool)shiftInB[7]; // A:7
+    extraButton2 = (bool)shiftInB[8]; // B:0
+    cycleFocusButton = (bool)shiftInB[9]; // B:1
+    hideUIButton = (bool)shiftInB[10]; // B:2
+    screenshotButton = (bool)shiftInB[11]; // B:3
+    mapFlightSwitch = (bool)shiftInB[12]; // B:4
+    extIvaSwitch = (bool)shiftInB[13]; // B:5
+    cycleCamModeButton = (bool)shiftInB[14]; // B:6
+    resetCamButton = (bool)shiftInB[15]; // B:7
 }
 
 ////////////// OUTPUTS ////////////////
@@ -947,6 +952,7 @@ void sendShiftOut(int pins[], int dataPin, int latchPin, int clockPin)
     // Enable
     digitalWrite(latchPin, HIGH);
 }
+
 void sendHeadingLCD()
 {
     // Clear LCD
@@ -979,7 +985,7 @@ void setup()
     // Register a method for receiving simpit messages from ksp
     mySimpit.inboundHandler(myCallbackHandler);
     // Register the simpit channels
-    registerChannels();
+    registerSimpitChannels();
 }
 
 /// <summary>Loops while the arduino is on.</summary>
@@ -987,16 +993,19 @@ void loop()
 {
     // Update simpit
     mySimpit.update();
+
     // Record analog inputs
     getInputs();
     // Set input values
     setInputs();
-    // Set outputs
-    setOutputs();
     // Update the inputs to ksp
     sendInputs();
+
+    // Set outputs
+    setOutputs();
     // Update the controllers outputs
     sendOutputs();
     // Delay 100ms
+
     delay(100);
 }
