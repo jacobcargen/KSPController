@@ -326,9 +326,8 @@ int targetVelocity;
 
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
-
 // Text for heading LCD
-String headingTopTxt, headingBotTxt;
+String headingLCDTopTxt, headingLCDBotTxt;
 
 // Create rotation msg
 rotationMessage rotMsg;
@@ -336,7 +335,6 @@ rotationMessage rotMsg;
 translationMessage transMsg;
 // Create new throttle msg
 throttleMessage throttleMsg;
-
 
 
 #pragma region Methods
@@ -847,23 +845,23 @@ void setOutputValues()
 /// <summary>Update the heading LCD.</summary>
 void setHeadingLCD()
 {
-    headingTopTxt = "";
-    headingBotTxt = "";
+    headingLCDTopTxt = "";
+    headingLCDBotTxt = "";
     // Calculate gap for soi name
     // No SOI names are more than 7 char, which is good because that is the exact amount of room at max on the lcd.
-    headingTopTxt += calculateGap(soi, 7);
+    headingLCDTopTxt += calculateGap(soi, 7);
     // Heading txt
-    headingTopTxt += " HDG+";
-    headingTopTxt += formatNumber(heading, 3, false, false);
-    headingTopTxt += degreeChar;
+    headingLCDTopTxt += " HDG+";
+    headingLCDTopTxt += formatNumber(heading, 3, false, false);
+    headingLCDTopTxt += degreeChar;
     // Pitch txt
-    headingBotTxt += "PTH";
-    headingBotTxt += formatNumber(pitch, 3, true, false);
-    headingBotTxt += degreeChar;
+    headingLCDBotTxt += "PTH";
+    headingLCDBotTxt += formatNumber(pitch, 3, true, false);
+    headingLCDBotTxt += degreeChar;
     // Roll txt
-    headingBotTxt += " RLL";
-    headingBotTxt += formatNumber(roll, 4, true, true);
-    headingBotTxt += degreeChar;
+    headingLCDBotTxt += " RLL";
+    headingLCDBotTxt += formatNumber(roll, 4, true, true);
+    headingLCDBotTxt += degreeChar;
 }
 // Speed lcd (WIP)
 /*
@@ -1007,12 +1005,12 @@ void sendHeadingLCD()
     headingLCD.clear();
     // Print to bottom line
     headingLCD.setCursor(0, 1);
-    headingLCD.print(headingBotTxt);
+    headingLCD.print(headingLCDBotTxt);
     // Delay
     delay(lcdLineDelay);
     // Print to top line
     headingLCD.setCursor(0, 0);
-    headingLCD.print(headingTopTxt);
+    headingLCD.print(headingLCDTopTxt);
 }
 
 #pragma endregion
