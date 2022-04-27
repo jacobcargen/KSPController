@@ -342,7 +342,9 @@ throttleMessage throttleMsg;
 ///<summary> Initialize the inputs and outputs.</summary>
 void initIO()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 {
-    // INPUTS \\
+    ////////////////
+    /*---INPUTS---*/
+    ////////////////
 
     pinMode(POWER_SWITCH_PIN, INPUT);
     pinMode(DEBUG_MODE_SWITCH_PIN, INPUT);
@@ -357,10 +359,12 @@ void initIO()
     pinMode(ABORT_LOCK_SWITCH_PIN, INPUT);
     pinMode(EXTRA_BUTTON_1_PIN, INPUT);
 
-    // OUTPUTS \\
+    /////////////////
+    /*---OUTPUTS---*/
+    /////////////////
 
     // LCDs
-    headingLCD.begin();
+    //headingLCD.begin(); Needs args?
     // Shift register pins
     pinMode(SHIFT_OUT_A_LATCH_PIN, OUTPUT);
     pinMode(SHIFT_OUT_A_DATA_PIN, OUTPUT);
@@ -415,6 +419,7 @@ void sendInputs()
 /*---OUTPUTS---*/
 /////////////////
 
+/// <summary>Get info to send to the controller. Ex: SPD, ALT, SAS state.</summary>
 void getOutputs()
 {
 
@@ -452,7 +457,7 @@ void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int la
 
 
     // Get the values
-    shiftInA;
+    //shiftInA[i] = ; in loop
     shiftInB;
 }
 
