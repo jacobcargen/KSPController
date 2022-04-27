@@ -4,7 +4,6 @@
  Author:	jacob
 */
 
-#include "Test.h"
 #include <Array.h>
 #include <PayloadStructs.h>
 #include <KerbalSimpitMessageTypes.h>
@@ -18,6 +17,15 @@ const char degreeChar = 223;
 KerbalSimpit mySimpit(Serial);
 
 #pragma region InputPinsStates
+
+// Shift in A pins (8 registers)
+const int SHIFT_IN_A_DATA_PIN = 11;
+const int SHIFT_IN_A_LATCH_PIN = 12;
+const int SHIFT_IN_A_CLOCK_PIN = 13;
+// Shift in B pins (2 registers)
+const int SHIFT_IN_B_DATA_PIN = 14;
+const int SHIFT_IN_B_LATCH_PIN = 15;
+const int SHIFT_IN_B_CLOCK_PIN = 16;
 
 const int POWER_SWITCH_PIN = 53;
 bool powerSwitch;
@@ -366,9 +374,91 @@ void initIO()
     pinMode(SHIFT_OUT_C_DATA_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_CLOCK_PIN, OUTPUT);
 }
+/// <summary>Register all the needed channels for receiving simpit messages.</summary>
+void registerSimpitChannels()
+{
+    mySimpit.registerChannel(ALTITUDE_MESSAGE);
+    mySimpit.registerChannel(ROTATION_DATA);
+    mySimpit.registerChannel(VELOCITY_MESSAGE);
+    mySimpit.registerChannel(SOI_MESSAGE);
+}
+
+////////////////
+/*---INPUTS---*/
+////////////////
 
 /// <summary>Records every input on the controller.</summary>
 void getInputs()
+{
+    getShiftIn(SHIFT_IN_A_DATA_PIN, SHIFT_IN_A_LATCH_PIN, SHIFT_IN_A_CLOCK_PIN, 
+        SHIFT_IN_B_DATA_PIN, SHIFT_IN_B_LATCH_PIN, SHIFT_IN_B_CLOCK_PIN);
+    getNonShiftRegInputs();
+}
+/// <summary>Set input values before sending them to ksp.</summary>
+void setInputs()
+{
+    setJoystickValues();
+    setThrottleValues();
+    setInputValues();
+}
+/// <summary>Send input data to ksp.</summary>
+void sendInputs()
+{
+    // Rotation
+    mySimpit.send(ROTATION_MESSAGE, rotMsg);
+    // Translation
+    mySimpit.send(TRANSLATION_MESSAGE, transMsg);
+    // Throttle
+    mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
+
+}
+
+/////////////////
+/*---OUTPUTS---*/
+/////////////////
+
+void getOutputs()
+{
+
+}
+/// <summary>Set values to prepare them for being sent.</summary>
+void setOutputs()
+{
+    //updateSpeedLCD();
+    setHeadingLCD();
+    // Set the output registers
+    setOutputValues();
+}
+/// <summary>Updates every output on the controller.</summary>
+void sendOutputs()
+{
+    // Shift register out group A
+    sendShiftOut(shiftOutA, SHIFT_OUT_A_DATA_PIN, SHIFT_OUT_A_LATCH_PIN, SHIFT_OUT_A_CLOCK_PIN);
+    // Shift register out group B
+    sendShiftOut(shiftOutB, SHIFT_OUT_B_DATA_PIN, SHIFT_OUT_B_LATCH_PIN, SHIFT_OUT_B_CLOCK_PIN);
+    // Shift register out group C
+    sendShiftOut(shiftOutC, SHIFT_OUT_C_DATA_PIN, SHIFT_OUT_C_LATCH_PIN, SHIFT_OUT_C_CLOCK_PIN);
+    // Heading LCD
+    sendHeadingLCD();
+}
+
+#pragma region Getting
+
+////////////////
+/*---INPUTS---*/
+////////////////
+
+/// <summary>Shift register input.</summary>
+void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int latchPinB, int clockPinB)
+{
+
+
+    // Get the values
+    shiftInA;
+    shiftInB;
+}
+
+void getNonShiftRegInputs()
 {
     // Get the raw axis values
     rotXRaw = analogRead(ROTATION_X_AXIS_PIN);
@@ -394,72 +484,13 @@ void getInputs()
     abortButton = (bool)digitalRead(ABORT_BUTTON_PIN);
     abortLockSwitch = (bool)digitalRead(ABORT_LOCK_SWITCH_PIN);
     extraButton1 = (bool)digitalRead(EXTRA_BUTTON_1_PIN);
-
-}
-/// <summary>Set input values before sending them to ksp.</summary>
-void setInputs()
-{
-    setJoystickValues();
-    setThrottleValues();
-}
-/// <summary>Send input data to ksp.</summary>
-void sendInputs()
-{
-    // Rotation
-    mySimpit.send(ROTATION_MESSAGE, rotMsg);
-    // Translation
-    mySimpit.send(TRANSLATION_MESSAGE, transMsg);
-    // Throttle
-    mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
-
 }
 
-/// <summary>Set values to prepare them for being sent.</summary>
-void setOutputs()
-{
-    //updateSpeedLCD();
-    setHeadingLCD();
-    // Set the output registers
-    setOutputRegisters();
-}
-/// <summary>Updates every output on the controller.</summary>
-void sendOutputs()
-{
-    // Shift register out group A
-    sendShiftOut(shiftOutA, SHIFT_OUT_A_DATA_PIN, SHIFT_OUT_A_LATCH_PIN, SHIFT_OUT_A_CLOCK_PIN);
-    // Shift register out group B
-    sendShiftOut(shiftOutB, SHIFT_OUT_B_DATA_PIN, SHIFT_OUT_B_LATCH_PIN, SHIFT_OUT_B_CLOCK_PIN);
-    // Shift register out group C
-    sendShiftOut(shiftOutC, SHIFT_OUT_C_DATA_PIN, SHIFT_OUT_C_LATCH_PIN, SHIFT_OUT_C_CLOCK_PIN);
-    // Heading LCD
-    sendHeadingLCD();
-}
+/////////////////
+/*---OUTPUTS---*/
+/////////////////
 
-#pragma region Simpit
-
-/// <summary>Register all the needed channels for receiving simpit messages.</summary>
-void registerSimpitChannels()
-{
-    mySimpit.registerChannel(ALTITUDE_MESSAGE);
-    mySimpit.registerChannel(ROTATION_DATA);
-    mySimpit.registerChannel(VELOCITY_MESSAGE);
-    mySimpit.registerChannel(SOI_MESSAGE);
-}
-
-#pragma endregion
-
-#pragma region Getting
-
-void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int latchPinB, int clockPinB)
-{
-
-
-    // Get the values
-    shiftInA;
-    shiftInB;
-}
-
-/// <summary>Simpit messages from ksp are received here.</summary>
+/// <summary>Info from ksp.</summary>
 void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 {
     switch (messageType)
@@ -506,50 +537,12 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 #pragma endregion
 
 #pragma region Setting
-////////////// INPUTS  ////////////////
 
-#pragma region Analog
+////////////////
+/*---INPUTS---*/
+////////////////
 
-/// <summary>Send joystick values to ksp for rotation and translation.</summary>
-void setJoystickValues()
-{
-    // Smoothing and mapping
-    int16_t rotX = smoothAndMapAxis(rotXRaw);
-    int16_t rotY = smoothAndMapAxis(rotYRaw);
-    int16_t rotZ = smoothAndMapAxis(rotZRaw);
-    int16_t transX = smoothAndMapAxis(transXRaw);
-    int16_t transY = smoothAndMapAxis(transYRaw);
-    int16_t transZ = smoothAndMapAxis(transZRaw);
-    // Flip some values the right way
-    rotX *= -1;
-    rotZ *= -1;
-    // Set msg values
-    rotMsg.setPitchRollYaw(rotY, rotX, rotZ);
-    transMsg.setXYZ(transX, transZ, transY);
-}
-/// <summary>Send throttle values to ksp.</summary>
-void setThrottleValues()
-{
-    // Smooth and map the raw input
-    int16_t throttle = smoothAndMapAxis(throttleRaw);
-    // Set the throttle value
-    throttleMsg.throttle = throttle;
-}
-/// <summary>Give the raw analog some smoothing.</summary>
-/// <returns>Returns a smoothed and mapped value.</returns>
-int16_t smoothAndMapAxis(int raw)
-{
-    // Smooth the raw input (NO SMOOTHING YET)
-    int smooth = raw;
-    // Map the smoothed data for simpit
-    int16_t newMap = map(smooth, 0, 1023, INT16_MIN, INT16_MAX);
-    // Return the smoothed mapped data
-    return raw;
-}
-
-#pragma endregion
-
-void getInputRegisters()
+void setInputValues()
 {
     // Shift registers in A
     infoModes[0] = (bool)shiftInA[0]; // A:0
@@ -633,104 +626,56 @@ void getInputRegisters()
     extIvaSwitch = (bool)shiftInB[13]; // B:5
     cycleCamModeButton = (bool)shiftInB[14]; // B:6
     resetCamButton = (bool)shiftInB[15]; // B:7
+    // More values (non-shift register)
+
 }
 
-////////////// OUTPUTS ////////////////
+#pragma region Analog
 
-#pragma region Serial
-
-/// <summary>Update the heading LCD.</summary>
-void setHeadingLCD()
+/// <summary>Send joystick values to ksp for rotation and translation.</summary>
+void setJoystickValues()
 {
-    headingTopTxt = "";
-    headingBotTxt = "";
-    // Calculate gap for soi name
-    // No SOI names are more than 7 char, which is good because that is the exact amount of room at max on the lcd.
-    headingTopTxt += calculateGap(soi, 7);
-    // Heading txt
-    headingTopTxt += " HDG+";
-    headingTopTxt += formatNumber(heading, 3, false, false);
-    headingTopTxt += degreeChar;
-    // Pitch txt
-    headingBotTxt += "PTH";
-    headingBotTxt += formatNumber(pitch, 3, true, false);
-    headingBotTxt += degreeChar;
-    // Roll txt
-    headingBotTxt += " RLL";
-    headingBotTxt += formatNumber(roll, 4, true, true);
-    headingBotTxt += degreeChar;
+    // Smoothing and mapping
+    int16_t rotX = smoothAndMapAxis(rotXRaw);
+    int16_t rotY = smoothAndMapAxis(rotYRaw);
+    int16_t rotZ = smoothAndMapAxis(rotZRaw);
+    int16_t transX = smoothAndMapAxis(transXRaw);
+    int16_t transY = smoothAndMapAxis(transYRaw);
+    int16_t transZ = smoothAndMapAxis(transZRaw);
+    // Flip some values the right way
+    rotX *= -1;
+    rotZ *= -1;
+    // Set msg values
+    rotMsg.setPitchRollYaw(rotY, rotX, rotZ);
+    transMsg.setXYZ(transX, transZ, transY);
 }
-// Speed lcd (WIP)
-/*
-void updateSpeedLCD()
+/// <summary>Send throttle values to ksp.</summary>
+void setThrottleValues()
 {
-    String topTxt, botTxt;
-
-    // Reference txt
-    topTxt += "REF:";
-    topTxt += reference;
-    // SPD txt
-    botTxt += "SPD ";
-    botTxt += formatNumber(spd, 4, true, true);
-    botTxt += "m/s";
-
-    // Clear LCD
-    speedLCD.clear();
-    // Print to top line
-    speedLCD.setCursor(0, 0);
-    speedLCD.print(topTxt);
-    // Delay
-    delay(lcdLine2Delay);
-    // Print to bottom line
-    speedLCD.setCursor(0, 1);
-    speedLCD.print(botTxt);
+    // Smooth and map the raw input
+    int16_t throttle = smoothAndMapAxis(throttleRaw);
+    // Set the throttle value
+    throttleMsg.throttle = throttle;
 }
-*/
-/// <summary>Format numbers for LCD. Length max = 4.</summary>
-/// <returns>Returns a formated number at a specific length.</returns>
-String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
+/// <summary>Give the raw analog some smoothing.</summary>
+/// <returns>Returns a smoothed and mapped value.</returns>
+int16_t smoothAndMapAxis(int raw)
 {
-    int num = abs(number);
-
-    bool isNegative = number < 0 ? true : false;
-    if (flipNegative && number != 0) isNegative = !isNegative;
-
-    if (num < 10) lengthReq -= 1;               // 1 characters
-    else if (num < 100) lengthReq -= 2;         // 2 characters
-    else if (num < 1000) lengthReq -= 3;        // 3 characters
-    else if (num < 10000) lengthReq -= 4;       // 4 characters
-
-    String str;
-    for (size_t i = 0; i < lengthReq; i++)
-    {
-        if (canBeNegative)
-        {
-            if (i == 0 && isNegative) str += "-";
-            else if (i == 0 && !isNegative) str += "+";
-            else str += "0";
-        }
-        else str += "0";
-    }
-
-    return str + (String)num;
-}
-/// <summary>Calculate a gap. The txt length cannot be more than the ideal length.</summary>
-String calculateGap(String includedTxt, int idealLength)
-{
-    // Calculate gap
-    int gap = idealLength - includedTxt.length();
-    if (gap < 0) return "";
-    String str;
-    for (size_t i = 0; i < gap; i++)
-    {
-        str += " ";
-    }
-    return includedTxt + str;
+    // Smooth the raw input (NO SMOOTHING YET)
+    int smooth = raw;
+    // Map the smoothed data for simpit
+    int16_t newMap = map(smooth, 0, 1023, INT16_MIN, INT16_MAX);
+    // Return the smoothed mapped data
+    return raw;
 }
 
 #pragma endregion
 
-void setOutputRegisters()
+/////////////////
+/*---OUTPUTS---*/
+/////////////////
+
+void setOutputValues()
 {
     // Shift register out A
     shiftOutA[0] = (int)sfLeds[0]; // A:0
@@ -897,9 +842,112 @@ void setOutputRegisters()
     shiftOutC[31] = 0; // D:7
 }
 
+#pragma region Serial
+
+/// <summary>Update the heading LCD.</summary>
+void setHeadingLCD()
+{
+    headingTopTxt = "";
+    headingBotTxt = "";
+    // Calculate gap for soi name
+    // No SOI names are more than 7 char, which is good because that is the exact amount of room at max on the lcd.
+    headingTopTxt += calculateGap(soi, 7);
+    // Heading txt
+    headingTopTxt += " HDG+";
+    headingTopTxt += formatNumber(heading, 3, false, false);
+    headingTopTxt += degreeChar;
+    // Pitch txt
+    headingBotTxt += "PTH";
+    headingBotTxt += formatNumber(pitch, 3, true, false);
+    headingBotTxt += degreeChar;
+    // Roll txt
+    headingBotTxt += " RLL";
+    headingBotTxt += formatNumber(roll, 4, true, true);
+    headingBotTxt += degreeChar;
+}
+// Speed lcd (WIP)
+/*
+void updateSpeedLCD()
+{
+    String topTxt, botTxt;
+
+    // Reference txt
+    topTxt += "REF:";
+    topTxt += reference;
+    // SPD txt
+    botTxt += "SPD ";
+    botTxt += formatNumber(spd, 4, true, true);
+    botTxt += "m/s";
+
+    // Clear LCD
+    speedLCD.clear();
+    // Print to top line
+    speedLCD.setCursor(0, 0);
+    speedLCD.print(topTxt);
+    // Delay
+    delay(lcdLine2Delay);
+    // Print to bottom line
+    speedLCD.setCursor(0, 1);
+    speedLCD.print(botTxt);
+}
+*/
+/// <summary>Format numbers for LCD. Length max = 4.</summary>
+/// <returns>Returns a formated number at a specific length.</returns>
+String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
+{
+    int num = abs(number);
+
+    bool isNegative = number < 0 ? true : false;
+    if (flipNegative && number != 0) isNegative = !isNegative;
+
+    if (num < 10) lengthReq -= 1;               // 1 characters
+    else if (num < 100) lengthReq -= 2;         // 2 characters
+    else if (num < 1000) lengthReq -= 3;        // 3 characters
+    else if (num < 10000) lengthReq -= 4;       // 4 characters
+
+    String str;
+    for (size_t i = 0; i < lengthReq; i++)
+    {
+        if (canBeNegative)
+        {
+            if (i == 0 && isNegative) str += "-";
+            else if (i == 0 && !isNegative) str += "+";
+            else str += "0";
+        }
+        else str += "0";
+    }
+
+    return str + (String)num;
+}
+/// <summary>Calculate a gap. The txt length cannot be more than the ideal length.</summary>
+String calculateGap(String includedTxt, int idealLength)
+{
+    // Calculate gap
+    int gap = idealLength - includedTxt.length();
+    if (gap < 0) return "";
+    String str;
+    for (size_t i = 0; i < gap; i++)
+    {
+        str += " ";
+    }
+    return includedTxt + str;
+}
+
+#pragma endregion
+
 #pragma endregion
 
 #pragma region Sending
+
+////////////////
+/*---INPUTS---*/
+////////////////
+
+
+
+/////////////////
+/*---OUTPUTS---*/
+/////////////////
 
 /// <summary>Updates a shift register group. (MSBFIRST) (MAX OF 64 pins)</summary>
 void sendShiftOut(int pins[], int dataPin, int latchPin, int clockPin)
@@ -1001,11 +1049,13 @@ void loop()
     // Update the inputs to ksp
     sendInputs();
 
+    // Get info for outputs
+    getOutputs();
     // Set outputs
     setOutputs();
     // Update the controllers outputs
     sendOutputs();
-    // Delay 100ms
 
+    // Delay 100ms
     delay(100);
 }
