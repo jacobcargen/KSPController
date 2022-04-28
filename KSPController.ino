@@ -379,10 +379,27 @@ void initIO()
 /// <summary>Register all the needed channels for receiving simpit messages.</summary>
 void registerSimpitChannels()
 {
+    mySimpit.registerChannel(SCENE_CHANGE_MESSAGE);
     mySimpit.registerChannel(ALTITUDE_MESSAGE);
-    mySimpit.registerChannel(ROTATION_DATA);
+    mySimpit.registerChannel(APSIDES_MESSAGE);
+    // LED Bars
+    mySimpit.registerChannel(SF_MESSAGE);
+    mySimpit.registerChannel(SF_STAGE_MESSAGE);
+    mySimpit.registerChannel(LF_STAGE_MESSAGE);
+    mySimpit.registerChannel(LF_MESSAGE);
+    mySimpit.registerChannel(OX_MESSAGE);
+    mySimpit.registerChannel(OX_STAGE_MESSAGE);
+    mySimpit.registerChannel(MONO_MESSAGE);
+    mySimpit.registerChannel(EVA_MESSAGE);
+    mySimpit.registerChannel(ELECTRIC_MESSAGE);
+
     mySimpit.registerChannel(VELOCITY_MESSAGE);
+    mySimpit.registerChannel(ACTIONSTATUS_MESSAGE);
+    mySimpit.registerChannel(APSIDESTIME_MESSAGE);
+    mySimpit.registerChannel(TARGETINFO_MESSAGE);
     mySimpit.registerChannel(SOI_MESSAGE);
+    mySimpit.registerChannel(ROTATION_DATA);
+    mySimpit.registerChannel(AIRSPEED_MESSAGE);
 }
 
 ////////////////
@@ -498,6 +515,82 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 {
     switch (messageType)
     {
+    case SCENE_CHANGE_MESSAGE:
+        if (msgSize == sizeof(msg))
+        {
+
+        }
+        break;
+    case ALTITUDE_MESSAGE:
+        if (msgSize == sizeof(altitudeMessage))
+        {
+            altitudeMessage am;
+            am = parseMessage<altitudeMessage>(msg);
+        }
+        break;
+    case APSIDES_MESSAGE:
+        if (msgSize == sizeof(apsidesMessage))
+        {
+            apsidesMessage am;
+            am = parseMessage<apsidesMessage>(msg);
+        }
+        break;
+    case LF_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage lf;
+            lf = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case LF_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage lfStage;
+            lfStage = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case OX_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage ox;
+            ox = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case OX_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage oxStage;
+            oxStage = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case SF_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage sf;
+            sf = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case SF_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage sfStage;
+            sfStage = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case MONO_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage mp;
+            mp = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case ELECTRIC_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage ec;
+            ec = parseMessage<resourceMessage>(msg);
+        }
+        break;
     case ROTATION_DATA:
         if (msgSize == sizeof(vesselPointingMessage))
         {
