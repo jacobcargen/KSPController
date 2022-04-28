@@ -591,14 +591,11 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
             ec = parseMessage<resourceMessage>(msg);
         }
         break;
-    case ROTATION_DATA:
-        if (msgSize == sizeof(vesselPointingMessage))
+    case EVA_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
         {
-            vesselPointingMessage vpm;
-            vpm = parseMessage<vesselPointingMessage>(msg);
-            heading = vpm.heading;
-            pitch = vpm.pitch;
-            roll = vpm.roll;
+            resourceMessage evaMP;
+            evaMP = parseMessage<resourceMessage>(msg);
         }
         break;
     case VELOCITY_MESSAGE:
@@ -609,6 +606,77 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
             surfaceVelocity = vm.surface;
             orbitalVelocity = vm.orbital;
             verticalVelocity = vm.vertical;
+        }
+        break;
+    case ACTIONSTATUS_MESSAGE:
+        if (msgSize == sizeof(msg))
+        {
+            switch (msg[0])
+            {
+            case STAGE_ACTION:
+                
+                break;
+            case GEAR_ACTION:
+
+                break;
+            case LIGHT_ACTION:
+
+                break;
+            case RCS_ACTION:
+
+                break;
+            case SAS_ACTION:
+
+                break;
+            case BRAKES_ACTION:
+
+                break;
+            case ABORT_ACTION:
+
+                break;
+            default:
+                break;
+            }
+            // OR
+            for (size_t i = 0; i < sizeof(msg); i++)
+            {
+                switch (msg[i])
+                {
+                case STAGE_ACTION:
+
+                    break;
+                case GEAR_ACTION:
+
+                    break;
+                case LIGHT_ACTION:
+
+                    break;
+                case RCS_ACTION:
+
+                    break;
+                case SAS_ACTION:
+
+                    break;
+                case BRAKES_ACTION:
+
+                    break;
+                case ABORT_ACTION:
+
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        break;
+    case ROTATION_DATA:
+        if (msgSize == sizeof(vesselPointingMessage))
+        {
+            vesselPointingMessage vpm;
+            vpm = parseMessage<vesselPointingMessage>(msg);
+            heading = vpm.heading;
+            pitch = vpm.pitch;
+            roll = vpm.roll;
         }
         break;
     case TARGETINFO_MESSAGE:
