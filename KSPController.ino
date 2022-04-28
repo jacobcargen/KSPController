@@ -4,7 +4,6 @@
  Author:	jacob
 */
 
-#include <Array.h>
 #include <PayloadStructs.h>
 #include <KerbalSimpitMessageTypes.h>
 #include <KerbalSimpit.h>
@@ -12,20 +11,22 @@
 #include <LiquidCrystal_I2C.h>
 
 // Degree character for the LCD
-const char degreeChar = 223;
+const char DEGREE_CHAR_LCD = 223;
 // Create insatance of Simpit
 KerbalSimpit mySimpit(Serial);
 
-#pragma region InputPinsStates
+#pragma region InputPinsAndStates
 
 // Shift in A pins (8 registers)
 const int SHIFT_IN_A_DATA_PIN = 11;
-const int SHIFT_IN_A_LATCH_PIN = 12;
+const int SHIFT_IN_A_CLOCK_ENABLE_PIN = 12;
 const int SHIFT_IN_A_CLOCK_PIN = 13;
+const int SHIFT_IN_A_LOAD_PIN = 14;
 // Shift in B pins (2 registers)
-const int SHIFT_IN_B_DATA_PIN = 14;
-const int SHIFT_IN_B_LATCH_PIN = 15;
-const int SHIFT_IN_B_CLOCK_PIN = 16;
+const int SHIFT_IN_B_DATA_PIN = 15;
+const int SHIFT_IN_B_CLOCK_ENABLE_PIN = 16;
+const int SHIFT_IN_B_CLOCK_PIN = 17;
+const int SHIFT_IN_B_LOAD_PIN = 18;
 
 const int POWER_SWITCH_PIN = 53;
 bool powerSwitch;
@@ -197,7 +198,7 @@ int throttleRaw;
 
 #pragma endregion
 
-#pragma region OutputPinsStates
+#pragma region OutputPinsAndStates
 
 // Shift out A pins (8 registers)
 const int SHIFT_OUT_A_DATA_PIN = 2;
@@ -345,7 +346,7 @@ void initIO()
     ////////////////
     /*---INPUTS---*/
     ////////////////
-
+    
     pinMode(POWER_SWITCH_PIN, INPUT);
     pinMode(DEBUG_MODE_SWITCH_PIN, INPUT);
     pinMode(SPEAKER_ENABLE_SWITCH_PIN, INPUT);
@@ -358,6 +359,9 @@ void initIO()
     pinMode(ABORT_BUTTON_PIN, INPUT);
     pinMode(ABORT_LOCK_SWITCH_PIN, INPUT);
     pinMode(EXTRA_BUTTON_1_PIN, INPUT);
+    // Shift register pins
+    pinMode(SHIFT_IN_A_DATA_PIN, INPUT);
+    pinMode(SHIFT_IN_B_DATA_PIN, INPUT);
 
     /////////////////
     /*---OUTPUTS---*/
@@ -375,6 +379,12 @@ void initIO()
     pinMode(SHIFT_OUT_C_LATCH_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_DATA_PIN, OUTPUT);
     pinMode(SHIFT_OUT_C_CLOCK_PIN, OUTPUT);
+    pinMode(SHIFT_IN_A_CLOCK_PIN, OUTPUT);
+    pinMode(SHIFT_IN_A_CLOCK_ENABLE_PIN, OUTPUT);
+    pinMode(SHIFT_IN_A_LOAD_PIN, OUTPUT);
+    pinMode(SHIFT_IN_B_CLOCK_PIN, OUTPUT);
+    pinMode(SHIFT_IN_B_CLOCK_ENABLE_PIN, OUTPUT);
+    pinMode(SHIFT_IN_B_LOAD_PIN, OUTPUT);
 }
 /// <summary>Register all the needed channels for receiving simpit messages.</summary>
 void registerSimpitChannels()
@@ -409,8 +419,8 @@ void registerSimpitChannels()
 /// <summary>Records every input on the controller.</summary>
 void getInputs()
 {
-    getShiftIn(SHIFT_IN_A_DATA_PIN, SHIFT_IN_A_LATCH_PIN, SHIFT_IN_A_CLOCK_PIN, 
-        SHIFT_IN_B_DATA_PIN, SHIFT_IN_B_LATCH_PIN, SHIFT_IN_B_CLOCK_PIN);
+    getShiftIn(SHIFT_IN_A_DATA_PIN, SHIFT_IN_A_CLOCK_ENABLE_PIN, SHIFT_IN_A_CLOCK_PIN, SHIFT_IN_A_LOAD_PIN,
+        SHIFT_IN_B_DATA_PIN, SHIFT_IN_B_CLOCK_ENABLE_PIN, SHIFT_IN_B_CLOCK_PIN, SHIFT_IN_B_LOAD_PIN);
     getNonShiftRegInputs();
 }
 /// <summary>Set input values before sending them to ksp.</summary>
@@ -468,14 +478,79 @@ void sendOutputs()
 /*---INPUTS---*/
 ////////////////
 
-/// <summary>Shift register input.</summary>
-void getShiftIn(int dataPinA, int latchPinA, int clockPinA, int dataPinB, int latchPinB, int clockPinB)
+/// <summary>Gets shift register inputs.</summary>
+void getShiftIn(int dataA, int clockEnableA, int clockA, int loadA,
+                int dataB, int clockEnableB, int clockB, int loadB)
 {
+    // Pulse to A
+    digitalWrite(loadA, LOW);
+    delayMicroseconds(5);
+    digitalWrite(loadA, HIGH);
+    delayMicroseconds(5);
+    byte inputA[8];
+    // Get input A data
+    digitalWrite(clockA, HIGH);
+    digitalWrite(clockEnableA, LOW);
+    inputA[0] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[1] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[2] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[3] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[4] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[5] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[6] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[7] = shiftIn(dataA, clockA, LSBFIRST);
+    digitalWrite(clockEnableA, HIGH);
+    
+    for (size_t i = 0; i < 64; i++)
+    {
+        if (i < 8)
+            if (1 == bitRead(inputA[0], i))
+                shiftInA[i] = 1;
+        else if (i < 16)
+            if (1 == bitRead(inputA[1], i - 8))
+                shiftInA[i] = 1;
+        else if (i < 24)
+            if (1 == bitRead(inputA[2], i - 16))
+                shiftInA[i] = 1;
+        else if (i < 32)
+            if (1 == bitRead(inputA[3], i - 24))
+                shiftInA[i] = 1;
+        else if (i < 40)
+            if (1 == bitRead(inputA[4], i - 32))
+                shiftInA[i] = 1;
+        else if (i < 48)
+            if (1 == bitRead(inputA[5], i - 40))
+                shiftInA[i] = 1;
+        else if (i < 56)
+            if (1 == bitRead(inputA[6], i - 48))
+                shiftInA[i] = 1;
+        else
+            if (1 == bitRead(inputA[7], i - 56))
+                shiftInA[i] = 1;
+    }
 
-
-    // Get the values
-    //shiftInA[i] = ; in loop
-    shiftInB;
+    // Pulse to B
+    digitalWrite(loadB, LOW);
+    delayMicroseconds(5);
+    digitalWrite(loadB, HIGH);
+    delayMicroseconds(5);
+    byte inputB[2];
+    // Get input B data
+    digitalWrite(clockB, HIGH);
+    digitalWrite(clockEnableB, LOW);
+    inputB[0] = shiftIn(dataB, clockB, LSBFIRST);
+    inputB[1] = shiftIn(dataB, clockB, LSBFIRST);
+    digitalWrite(clockEnableB, HIGH);
+    
+    for (size_t i = 0; i < 16; i++)
+    {
+        if (i < 8)
+            if (1 == bitRead(inputB[0], i))
+                shiftInB[i] = 1;
+        else
+            if (1 == bitRead(inputB[1], i - 8))
+                shiftInB[i] = 1;
+    }
 }
 
 void getNonShiftRegInputs()
@@ -515,106 +590,22 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
 {
     switch (messageType)
     {
-    case SCENE_CHANGE_MESSAGE:
-        if (msgSize == sizeof(msg))
-        {
-
-        }
-        break;
-    case ALTITUDE_MESSAGE:
-        if (msgSize == sizeof(altitudeMessage))
-        {
-            altitudeMessage am;
-            am = parseMessage<altitudeMessage>(msg);
-        }
-        break;
-    case APSIDES_MESSAGE:
-        if (msgSize == sizeof(apsidesMessage))
-        {
-            apsidesMessage am;
-            am = parseMessage<apsidesMessage>(msg);
-        }
-        break;
-    case LF_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage lf;
-            lf = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case LF_STAGE_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage lfStage;
-            lfStage = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case OX_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage ox;
-            ox = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case OX_STAGE_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage oxStage;
-            oxStage = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case SF_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage sf;
-            sf = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case SF_STAGE_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage sfStage;
-            sfStage = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case MONO_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage mp;
-            mp = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case ELECTRIC_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage ec;
-            ec = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case EVA_MESSAGE:
-        if (msgSize == sizeof(resourceMessage))
-        {
-            resourceMessage evaMP;
-            evaMP = parseMessage<resourceMessage>(msg);
-        }
-        break;
-    case VELOCITY_MESSAGE:
-        if (msgSize == sizeof(velocityMessage))
-        {
-            velocityMessage vm;
-            vm = parseMessage<velocityMessage>(msg);
-            surfaceVelocity = vm.surface;
-            orbitalVelocity = vm.orbital;
-            verticalVelocity = vm.vertical;
-        }
-        break;
+    case AB_MESSAGE:break;
+    case AB_STAGE_MESSAGE:break;
     case ACTIONSTATUS_MESSAGE:
         if (msgSize == sizeof(msg))
         {
+            if (msg[0] & STAGE_ACTION);
+            if (msg[1] & GEAR_ACTION);
+            if (msg[2] & LIGHT_ACTION);
+            if (msg[3] & RCS_ACTION);
+            if (msg[4] & SAS_ACTION);
+            if (msg[5] & BRAKES_ACTION);
+            /*
             switch (msg[0])
             {
             case STAGE_ACTION:
-                
+
                 break;
             case GEAR_ACTION:
 
@@ -667,6 +658,81 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
                     break;
                 }
             }
+            */
+        }
+        break;
+    case AIRSPEED_MESSAGE:break;
+    case ALTITUDE_MESSAGE:
+        if (msgSize == sizeof(altitudeMessage))
+        {
+            altitudeMessage am;
+            am = parseMessage<altitudeMessage>(msg);
+        }
+        break;
+    case APSIDESTIME_MESSAGE:break;
+    case APSIDES_MESSAGE:
+        if (msgSize == sizeof(apsidesMessage))
+        {
+            apsidesMessage am;
+            am = parseMessage<apsidesMessage>(msg);
+        }
+        break;
+    case ATMO_CONDITIONS_MESSAGE:break;
+    case BURNTIME_MESSAGE:break;
+    case CAGSTATUS_MESSAGE:break;
+    case DELTAVENV_MESSAGE:break;
+    case DELTAV_MESSAGE:break;
+    case ELECTRIC_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage ec;
+            ec = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case EVA_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage evaMP;
+            evaMP = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case FLIGHT_STATUS_MESSAGE:break;
+    case LF_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage lf;
+            lf = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case LF_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage lfStage;
+            lfStage = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case MANEUVER_MESSAGE:break;
+    case MONO_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage mp;
+            mp = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case ORBIT_MESSAGE:break;
+    case ORE_MESSAGE:break;
+    case OX_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage ox;
+            ox = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case OX_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage oxStage;
+            oxStage = parseMessage<resourceMessage>(msg);
         }
         break;
     case ROTATION_DATA:
@@ -679,12 +745,25 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
             roll = vpm.roll;
         }
         break;
-    case TARGETINFO_MESSAGE:
-        if (msgSize == sizeof(targetMessage))
+    case SAS_MODE_INFO_MESSAGE:break;
+    case SCENE_CHANGE_MESSAGE:
+        if (msgSize == sizeof(msg))
         {
-            targetMessage tm;
-            tm = parseMessage<targetMessage>(msg);
-            targetVelocity = tm.velocity;
+
+        }
+        break;
+    case SF_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage sf;
+            sf = parseMessage<resourceMessage>(msg);
+        }
+        break;
+    case SF_STAGE_MESSAGE:
+        if (msgSize == sizeof(resourceMessage))
+        {
+            resourceMessage sfStage;
+            sfStage = parseMessage<resourceMessage>(msg);
         }
         break;
     case SOI_MESSAGE: // WIP
@@ -693,6 +772,27 @@ void myCallbackHandler(byte messageType, byte msg[], byte msgSize)
         soi[soi.length()] = '\0';
         mySimpit.printToKSP("SOI:'" + soi + "'", PRINT_TO_SCREEN);
         break;
+    case TARGETINFO_MESSAGE:
+        if (msgSize == sizeof(targetMessage))
+        {
+            targetMessage tm;
+            tm = parseMessage<targetMessage>(msg);
+            targetVelocity = tm.velocity;
+        }
+        break;
+    case TEMP_LIMIT_MESSAGE:break;
+    case VELOCITY_MESSAGE:
+        if (msgSize == sizeof(velocityMessage))
+        {
+            velocityMessage vm;
+            vm = parseMessage<velocityMessage>(msg);
+            surfaceVelocity = vm.surface;
+            orbitalVelocity = vm.orbital;
+            verticalVelocity = vm.vertical;
+        }
+        break;
+    case XENON_GAS_MESSAGE:break;
+    case XENON_GAS_STAGE_MESSAGE:break;
     default:
         break;
     }
@@ -1019,15 +1119,15 @@ void setHeadingLCD()
     // Heading txt
     headingLCDTopTxt += " HDG+";
     headingLCDTopTxt += formatNumber(heading, 3, false, false);
-    headingLCDTopTxt += degreeChar;
+    headingLCDTopTxt += DEGREE_CHAR_LCD;
     // Pitch txt
     headingLCDBotTxt += "PTH";
     headingLCDBotTxt += formatNumber(pitch, 3, true, false);
-    headingLCDBotTxt += degreeChar;
+    headingLCDBotTxt += DEGREE_CHAR_LCD;
     // Roll txt
     headingLCDBotTxt += " RLL";
     headingLCDBotTxt += formatNumber(roll, 4, true, true);
-    headingLCDBotTxt += degreeChar;
+    headingLCDBotTxt += DEGREE_CHAR_LCD;
 }
 // Speed lcd (WIP)
 /*
