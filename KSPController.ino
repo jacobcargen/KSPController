@@ -15,6 +15,19 @@ const char DEGREE_CHAR_LCD = 223;
 // Create insatance of Simpit
 KerbalSimpit mySimpit(Serial);
 
+enum directionMode
+{
+    maneuver, // Player depicted
+    prograde, // Towards
+    retrograde, // Away
+    normal, // Up
+    antiNormal, // Down
+    radial, // In
+    antiRadial, // Out
+    target, // Towards
+    antiTarget // Away
+};
+
 #pragma region InputPinsAndStates
 
 // Shift in A pins (8 registers)
@@ -319,17 +332,44 @@ bool sasModeLeds[10];
 
 // SOI
 String soi = "";
-// Heading
-int heading;
-// Pitch
-int pitch;
-// Roll 
-int roll;
-// 
+// Altitude
+int altitude;
+// Velocities
 int surfaceVelocity;
 int orbitalVelocity;
 int verticalVelocity;
 int targetVelocity;
+// Ship Direction and orientation
+int heading;
+int pitch;
+int roll;
+// Maneuver Direction
+int maneuverHeading;
+int maneuverPitch;
+// Prograde Direction
+int progradeHeading;
+int progradePitch;
+// Retrograde Direction
+int retrogradeHeading;
+int retorgradePitch;
+// Normal Direction
+int normalHeading;
+int normalPitch;
+// Anti-Normal Direction
+int antiNormalHeading;
+int antiNormalPitch;
+// Radial Direction
+int radialHeading;
+int radialPitch;
+// Anti-Radial Direction
+int antiRadialHeading;
+int antiRadialPitch;
+// Target Direction
+int targetHeading;
+int targetPitch;
+// Anti-Target Direction
+int antiTargetHeading;
+int antiTargetPitch;
 
 #pragma endregion
 
@@ -469,8 +509,12 @@ void getOutputs()
 /// <summary>Set values to prepare them for being sent.</summary>
 void setOutputs()
 {
-    //updateSpeedLCD();
+    // Lcd screen value setting 
+    setSpeedLCD();
+    setAltitufeLCD();
+    setInfoLCD();
     setHeadingLCD();
+    setDirectionLCD;
     // Set the output registers
     setOutputValues();
 }
@@ -483,8 +527,12 @@ void sendOutputs()
     sendShiftOut(shiftOutB, SHIFT_OUT_B_DATA_PIN, SHIFT_OUT_B_LATCH_PIN, SHIFT_OUT_B_CLOCK_PIN);
     // Shift register out group C
     sendShiftOut(shiftOutC, SHIFT_OUT_C_DATA_PIN, SHIFT_OUT_C_LATCH_PIN, SHIFT_OUT_C_CLOCK_PIN);
-    // Heading LCD
+    // Update screens
+    sendSpeedLCD();
+    sendAltitufeLCD();
+    sendInfoLCD();
     sendHeadingLCD();
+    sendDirectionLCD();
 }
 
 #pragma region Getting
@@ -1131,16 +1179,43 @@ void setSpeedLCD()
 /// <summary>Set the altitude lcd values.</summary>
 void setAltitufeLCD()
 {
-
+    // Check the alt mode (NEEDS TO CHECK MODE STILL)(UPDATE THIS) 
+    bool radarMode = true;
+    // Alt
+    int alt;
+    // Clear the strings
+    altLCDTopTxt = "";
+    altLCDBotTxt = "";
+    // Calculate gap for soi name
+    // No SOI names are more than 7 char, which is good because that is the exact amount of room at max on the lcd.
+    altLCDTopTxt += calculateGap(soi, 7);
+    // Check altitude mode
+    if (!radarMode) // SEA
+    {
+        altLCDTopTxt += "      Sea";
+    }
+    else // LAND
+    {
+        altLCDTopTxt += "     Land";
+    }
+    // Alt txt
+    altLCDBotTxt += "ALT ";
+    if (altitude >= 1000000) alt = getKilos(altitude);
+    // Alt 
+    altLCDBotTxt += formatNumber(alt, 11, true, false);
+    // Add distance unit
+    if (altitude >= 1000000) altLCDBotTxt += "k";
+    else altLCDBotTxt += "m";
 }
 /// <summary>Set the info lcd values.</summary>
 void setInfoLCD()
 {
-
+    // Just do this last..
 }
 /// <summary>Set the heading lcd values.</summary>
 void setHeadingLCD()
 {
+    // Clear the strings
     headingLCDTopTxt = "";
     headingLCDBotTxt = "";
     // Calculate gap for soi name
@@ -1160,23 +1235,110 @@ void setHeadingLCD()
     headingLCDBotTxt += DEGREE_CHAR_LCD;
 }
 /// <summary>Set the direction lcd values.</summary>
-void setDirectionLCD()
+void setDirectionLCD(directionMode dirMode)
 {
-
+    // Clear the strings
+    dirLCDTopTxt = "";
+    dirLCDBotTxt = "";
+    // Gap after the mode name
+    String gap = "    "; // Default gap
+    // Declare the values
+    int hdg, pth; // No need for roll
+    // Check for which mode the use and set the values for that mode
+    switch (dirMode)
+    {
+    case maneuver:
+        dirLCDTopTxt += "MVR";
+        hdg = maneuverHeading;
+        pth = maneuverPitch;
+        break;
+    case prograde:
+        dirLCDTopTxt += "PGD";
+        hdg = progradeHeading;
+        pth = progradePitch;
+        break;
+    case retrograde:
+        dirLCDTopTxt += "RGD";
+        hdg = retrogradeHeading;
+        pth = retorgradePitch;
+        break;
+    case normal:
+        dirLCDTopTxt += "NOR";
+        hdg = normalHeading;
+        pth = normalPitch;
+        break;
+    case antiNormal:
+        dirLCDTopTxt += "A-NOR";
+        hdg = antiNormalHeading;
+        pth = antiNormalPitch;
+        gap = "  ";
+        break;
+    case radial:
+        dirLCDTopTxt += "RAD";
+        hdg = radialHeading;
+        pth = radialPitch;
+        break;
+    case antiRadial:
+        dirLCDTopTxt += "A-RAD";
+        hdg = antiRadialHeading;
+        pth = antiRadialPitch;
+        gap = "  ";
+        break;
+    case target:
+        dirLCDTopTxt += "TAR";
+        hdg = targetHeading;
+        pth = targetPitch;
+        break;
+    case antiTarget:
+        dirLCDTopTxt += "A-TAR";
+        hdg = antiTargetHeading;
+        pth = antiTargetPitch;
+        gap = "  ";
+        break;
+    default:
+        break;
+    }
+    // Gap
+    dirLCDTopTxt += gap;
+    // Heading txt
+    dirLCDTopTxt += " HDG+";
+    dirLCDTopTxt += formatNumber(hdg, 3, false, false);
+    dirLCDTopTxt += DEGREE_CHAR_LCD;
+    // Pitch txt
+    dirLCDBotTxt += "PTH";
+    dirLCDBotTxt += formatNumber(pth, 3, true, false);
+    dirLCDBotTxt += DEGREE_CHAR_LCD;
 }
-/// <summary>Format numbers for lcd. Length max = 4.</summary>
+/// <summary>Format numbers for lcd. Length max is 16 characters.</summary>
 /// <returns>Returns a formated number at a specific length.</returns>
+/// <remarks>This will fit a number to a character range,
+/// the number will be to the right of the excess characters. 
+/// The excess will become zeros (to the left of the number).</remarks>
 String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
 {
+    // Makes the number a positive
     int num = abs(number);
-
+    // Check if the number is negative 
     bool isNegative = number < 0 ? true : false;
+    // If should flip the polarity, Does not flip if the number is a zero (fix for causing zero to go negative)
     if (flipNegative && number != 0) isNegative = !isNegative;
-
-    if (num < 10) lengthReq -= 1;               // 1 characters
-    else if (num < 100) lengthReq -= 2;         // 2 characters
-    else if (num < 1000) lengthReq -= 3;        // 3 characters
-    else if (num < 10000) lengthReq -= 4;       // 4 characters
+    // Check length
+    if (num < 10) lengthReq -= 1; // 1 characters
+    else if (num < 100) lengthReq -= 2; // 2 characters
+    else if (num < 1000) lengthReq -= 3; // 3 characters
+    else if (num < 10000) lengthReq -= 4; // 4 characters
+    else if (num < 100000) lengthReq -= 5; // 5 characters
+    else if (num < 1000000) lengthReq -= 6; // 6 characters
+    else if (num < 10000000) lengthReq -= 7; // 7 characters
+    else if (num < 100000000) lengthReq -= 8; // 8 characters
+    else if (num < 1000000000) lengthReq -= 9; // 9 characters
+    else if (num < 10000000000) lengthReq -= 10; // 10 characters
+    else if (num < 100000000000) lengthReq -= 11; // 11 characters
+    else if (num < 1000000000000) lengthReq -= 12; // 12 characters
+    else if (num < 10000000000000) lengthReq -= 13; // 13 characters
+    else if (num < 100000000000000) lengthReq -= 14; // 14 characters
+    else if (num < 1000000000000000) lengthReq -= 15; // 15 characters
+    else if (num < 10000000000000000) lengthReq -= 16; // 16 characters
 
     String str;
     for (size_t i = 0; i < lengthReq; i++)
@@ -1204,6 +1366,16 @@ String calculateGap(String includedTxt, int idealLength)
         str += " ";
     }
     return includedTxt + str;
+}
+/// <summary>Input meters and receive it converted and rounded into kilos.</summary>
+/// <param name="meters"></param>
+/// <returns>Meters conveted into kilos.</returns>
+int getKilos(int meters)
+{
+    // Convert
+    int kilos = meters / 1000;
+    // Round and return
+    return round(kilos);
 }
 
 #pragma endregion

@@ -1,0 +1,4 @@
+Notes: Might need to move calls for 
+-	getInputs(), setInputs(), sendInputs(), 
+-	getOutputs(), setOutputs(), and sendOutputs() 
+into their own coroutines rather than the arduino loop().
