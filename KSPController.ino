@@ -1,7 +1,7 @@
 /*
  Name:		KSPController.ino
  Created:	04/13/2022 21:27:40
- Author:	jacob
+ Author:	Jacob Cargen
 */
 
 #include <PayloadStructs.h>
@@ -10,7 +10,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Degree character for the LCD
+// Degree character for the lcd
 const char DEGREE_CHAR_LCD = 223;
 // Create insatance of Simpit
 KerbalSimpit mySimpit(Serial);
@@ -257,8 +257,16 @@ bool ecLeds[20];
 
 #pragma region Communication
 
-// Heading LCD
+// Speed lcd
+LiquidCrystal_I2C speedLCD(0x27, 16, 2);
+// Altitude lcd
+LiquidCrystal_I2C altitudeLCD(0x27, 16, 2);
+// Info lcd
+LiquidCrystal_I2C infoLCD(0x27, 16, 2);
+// Heading lcd
 LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 rows
+// Direction lcd
+LiquidCrystal_I2C directionLCD(0x27, 16, 2);
 
 #pragma endregion
 
@@ -327,8 +335,16 @@ int targetVelocity;
 
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
-// Text for heading LCD
+// Text for speed lcd
+String speedLCDTopTxt, speedLCDBotTxt;
+// Text for altitude lcd
+String altLCDTopTxt, altLCDBotTxt;
+// Text for info lcd
+String infoLCDTopTxt, infoLCDBotTxt;
+// Text for heading lcd
 String headingLCDTopTxt, headingLCDBotTxt;
+// Text for direction lcd
+String dirLCDTopTxt, dirLCDBotTxt;
 
 // Create rotation msg
 rotationMessage rotMsg;
@@ -340,7 +356,7 @@ throttleMessage throttleMsg;
 
 #pragma region Methods
 
-///<summary> Initialize the inputs and outputs.</summary>
+///<summary>Initialize the inputs and outputs.</summary>
 void initIO()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 {
     ////////////////
@@ -439,7 +455,6 @@ void sendInputs()
     mySimpit.send(TRANSLATION_MESSAGE, transMsg);
     // Throttle
     mySimpit.send(THROTTLE_MESSAGE, throttleMsg);
-
 }
 
 /////////////////
@@ -478,7 +493,7 @@ void sendOutputs()
 /*---INPUTS---*/
 ////////////////
 
-/// <summary>Gets shift register inputs.</summary>
+/// <summary>Gets shift register inputs.(MSBFIRST)</summary>
 void getShiftIn(int dataA, int clockEnableA, int clockA, int loadA,
                 int dataB, int clockEnableB, int clockB, int loadB)
 {
@@ -491,14 +506,14 @@ void getShiftIn(int dataA, int clockEnableA, int clockA, int loadA,
     // Get input A data
     digitalWrite(clockA, HIGH);
     digitalWrite(clockEnableA, LOW);
-    inputA[0] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[1] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[2] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[3] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[4] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[5] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[6] = shiftIn(dataA, clockA, LSBFIRST);
-    inputA[7] = shiftIn(dataA, clockA, LSBFIRST);
+    inputA[0] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[1] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[2] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[3] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[4] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[5] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[6] = shiftIn(dataA, clockA, MSBFIRST);
+    inputA[7] = shiftIn(dataA, clockA, MSBFIRST);
     digitalWrite(clockEnableA, HIGH);
     
     for (size_t i = 0; i < 64; i++)
@@ -538,8 +553,8 @@ void getShiftIn(int dataA, int clockEnableA, int clockA, int loadA,
     // Get input B data
     digitalWrite(clockB, HIGH);
     digitalWrite(clockEnableB, LOW);
-    inputB[0] = shiftIn(dataB, clockB, LSBFIRST);
-    inputB[1] = shiftIn(dataB, clockB, LSBFIRST);
+    inputB[0] = shiftIn(dataB, clockB, MSBFIRST);
+    inputB[1] = shiftIn(dataB, clockB, MSBFIRST);
     digitalWrite(clockEnableB, HIGH);
     
     for (size_t i = 0; i < 16; i++)
@@ -1108,7 +1123,22 @@ void setOutputValues()
 
 #pragma region Serial
 
-/// <summary>Update the heading LCD.</summary>
+/// <summary>Set the speed lcd values.</summary>
+void setSpeedLCD()
+{
+
+}
+/// <summary>Set the altitude lcd values.</summary>
+void setAltitufeLCD()
+{
+
+}
+/// <summary>Set the info lcd values.</summary>
+void setInfoLCD()
+{
+
+}
+/// <summary>Set the heading lcd values.</summary>
 void setHeadingLCD()
 {
     headingLCDTopTxt = "";
@@ -1129,33 +1159,12 @@ void setHeadingLCD()
     headingLCDBotTxt += formatNumber(roll, 4, true, true);
     headingLCDBotTxt += DEGREE_CHAR_LCD;
 }
-// Speed lcd (WIP)
-/*
-void updateSpeedLCD()
+/// <summary>Set the direction lcd values.</summary>
+void setDirectionLCD()
 {
-    String topTxt, botTxt;
 
-    // Reference txt
-    topTxt += "REF:";
-    topTxt += reference;
-    // SPD txt
-    botTxt += "SPD ";
-    botTxt += formatNumber(spd, 4, true, true);
-    botTxt += "m/s";
-
-    // Clear LCD
-    speedLCD.clear();
-    // Print to top line
-    speedLCD.setCursor(0, 0);
-    speedLCD.print(topTxt);
-    // Delay
-    delay(lcdLine2Delay);
-    // Print to bottom line
-    speedLCD.setCursor(0, 1);
-    speedLCD.print(botTxt);
 }
-*/
-/// <summary>Format numbers for LCD. Length max = 4.</summary>
+/// <summary>Format numbers for lcd. Length max = 4.</summary>
 /// <returns>Returns a formated number at a specific length.</returns>
 String formatNumber(int number, byte lengthReq, bool canBeNegative, bool flipNegative)
 {
@@ -1265,18 +1274,75 @@ void sendShiftOut(int pins[], int dataPin, int latchPin, int clockPin)
     digitalWrite(latchPin, HIGH);
 }
 
+/// <summary>Update the speed.</summary>
+void sendSpeedLCD()
+{
+    // Clear LCD
+    speedLCD.clear();
+    // Print to top line
+    speedLCD.setCursor(0, 0);
+    speedLCD.print(speedLCDTopTxt);
+    // Delay
+    delay(lcdLineDelay);
+    // Print to bottom line
+    speedLCD.setCursor(0, 1);
+    speedLCD.print(speedLCDBotTxt);
+}
+/// <summary>Update the altitude lcd.</summary>
+void sendAltitufeLCD()
+{
+    // Clear LCD
+    altitudeLCD.clear();
+    // Print to top line
+    altitudeLCD.setCursor(0, 0);
+    altitudeLCD.print(altLCDTopTxt);
+    // Delay
+    delay(lcdLineDelay);
+    // Print to bottom line
+    altitudeLCD.setCursor(0, 1);
+    altitudeLCD.print(altLCDBotTxt);
+}
+/// <summary>Update the info lcd.</summary>
+void sendInfoLCD()
+{
+    // Clear LCD
+    infoLCD.clear();
+    // Print to top line
+    infoLCD.setCursor(0, 0);
+    infoLCD.print(infoLCDTopTxt);
+    // Delay
+    delay(lcdLineDelay);
+    // Print to bottom line
+    infoLCD.setCursor(0, 1);
+    infoLCD.print(infoLCDBotTxt);
+}
+/// <summary>Update the heading lcd.</summary>
 void sendHeadingLCD()
 {
     // Clear LCD
     headingLCD.clear();
-    // Print to bottom line
-    headingLCD.setCursor(0, 1);
-    headingLCD.print(headingLCDBotTxt);
-    // Delay
-    delay(lcdLineDelay);
     // Print to top line
     headingLCD.setCursor(0, 0);
     headingLCD.print(headingLCDTopTxt);
+    // Delay
+    delay(lcdLineDelay);
+    // Print to bottom line
+    headingLCD.setCursor(0, 1);
+    headingLCD.print(headingLCDBotTxt);
+}
+/// <summary>Update the direction lcd.</summary>
+void sendDirectionLCD()
+{
+    // Clear LCD
+    directionLCD.clear();
+    // Print to top line
+    directionLCD.setCursor(0, 0);
+    directionLCD.print(dirLCDTopTxt);
+    // Delay
+    delay(lcdLineDelay);
+    // Print to bottom line
+    directionLCD.setCursor(0, 1);
+    directionLCD.print(dirLCDBotTxt);
 }
 
 #pragma endregion
