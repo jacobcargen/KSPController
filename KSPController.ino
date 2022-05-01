@@ -28,6 +28,14 @@ enum directionMode
     antiTarget // Away
 };
 
+enum speedMode
+{
+    surface,
+    orbit,
+    target,
+    vertical,
+};
+
 #pragma region InputPinsAndStates
 
 // Shift in A pins (8 registers)
@@ -373,6 +381,8 @@ int antiTargetPitch;
 
 #pragma endregion
 
+// Current speed mode to show on speed LCD
+speedMode currentSpeedMode;
 // Time between the top and bottom of the lcd prints
 int lcdLineDelay = 0;
 // Text for speed lcd
@@ -1174,6 +1184,42 @@ void setOutputValues()
 /// <summary>Set the speed lcd values.</summary>
 void setSpeedLCD()
 {
+    // Txt for the speed mode
+    String mode;
+    // Speed
+    int speed;
+    // Clear the strings
+    speedLCDTopTxt = "";
+    speedLCDBotTxt = "";
+    // Check the current speed mode to use and set the values for that mode
+    switch (currentSpeedMode)
+    {
+    case surface:
+        speed = surfaceVelocity;
+        mode = "Surface";
+        break;
+    case orbit:
+        speed = orbitalVelocity;
+        mode = "Orbit";
+        break;
+    case target:
+        speed = targetVelocity;
+        mode = "Target";
+        break;
+    case vertical:
+        speed = verticalVelocity;
+        mode = "Vertical";
+        break;
+    default:
+        break;
+    }
+    speedLCDTopTxt += mode;// Alt 
+    // Speed txt
+    speedLCDBotTxt += "SPD ";
+    // Speed
+    speedLCDBotTxt += formatNumber(speed, 9, false, false);
+    // Add unit measurement
+    speedLCDBotTxt += "m/s";
 
 }
 /// <summary>Set the altitude lcd values.</summary>
