@@ -32,7 +32,7 @@ enum speedMode
 {
     surface,
     orbit,
-    target,
+    targetVel,
     vertical,
 };
 
@@ -186,7 +186,7 @@ bool extIvaSwitch;
 bool cycleCamModeButton;
 bool resetCamButton;
 
-#pragma region AnalogPins
+// AnalogPins \\
 
 // Rotation Joystick X-Axis(Roll)
 const int ROTATION_X_AXIS_PIN = A0;
@@ -206,8 +206,6 @@ const int TRANSLATION_Z_AXIS_PIN = A6;
 const int TRANSLATION_BUTTON_PIN = A7;
 // Throttle Axis
 const int THROTTLE_AXIS_PIN = A8;
-
-#pragma endregion
 
 // Joystick analog
 int rotXRaw, rotYRaw, rotZRaw;
@@ -261,7 +259,7 @@ bool warningLeds[10];
 9:FAULT
 */
 
-#pragma region LED_BARS // True for on
+// LED_BARS \\
 
 // SF
 bool sfLeds[20];
@@ -274,9 +272,7 @@ bool mpLeds[20];
 // EC
 bool ecLeds[20];
 
-#pragma endregion
-
-#pragma region Communication
+// Communication \\
 
 // Speed lcd
 LiquidCrystal_I2C speedLCD(0x27, 16, 2);
@@ -288,8 +284,6 @@ LiquidCrystal_I2C infoLCD(0x27, 16, 2);
 LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 rows
 // Direction lcd
 LiquidCrystal_I2C directionLCD(0x27, 16, 2);
-
-#pragma endregion
 
 // Stage & Abort
 bool stageLed;
@@ -403,8 +397,6 @@ translationMessage transMsg;
 // Create new throttle msg
 throttleMessage throttleMsg;
 
-
-#pragma region Methods
 
 ///<summary>Initialize the inputs and outputs.</summary>
 void initIO()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
@@ -967,7 +959,7 @@ void setInputValues()
 
 }
 
-#pragma region Analog
+// Analog \\
 
 /// <summary>Send joystick values to ksp for rotation and translation.</summary>
 void setJoystickValues()
@@ -1005,8 +997,6 @@ int16_t smoothAndMapAxis(int raw)
     // Return the smoothed mapped data
     return raw;
 }
-
-#pragma endregion
 
 /////////////////
 /*---OUTPUTS---*/
@@ -1179,7 +1169,7 @@ void setOutputValues()
     shiftOutC[31] = 0; // D:7
 }
 
-#pragma region Serial
+// Serial \\
 
 /// <summary>Set the speed lcd values.</summary>
 void setSpeedLCD()
@@ -1202,7 +1192,7 @@ void setSpeedLCD()
         speed = orbitalVelocity;
         mode = "Orbit";
         break;
-    case target:
+    case targetVel:
         speed = targetVelocity;
         mode = "Target";
         break;
@@ -1281,8 +1271,9 @@ void setHeadingLCD()
     headingLCDBotTxt += DEGREE_CHAR_LCD;
 }
 /// <summary>Set the direction lcd values.</summary>
-void setDirectionLCD(directionMode dirMode)
+void setDirectionLCD()
 {
+    directionMode dirMode;
     // Clear the strings
     dirLCDTopTxt = "";
     dirLCDBotTxt = "";
@@ -1416,15 +1407,13 @@ String calculateGap(String includedTxt, int idealLength)
 /// <summary>Input meters and receive it converted and rounded into kilos.</summary>
 /// <param name="meters"></param>
 /// <returns>Meters conveted into kilos.</returns>
-int getKilos(int meters)
+int getKilos(int meters) 
 {
     // Convert
     int kilos = meters / 1000;
     // Round and return
     return round(kilos);
 }
-
-#pragma endregion
 
 #pragma endregion
 
@@ -1564,8 +1553,6 @@ void sendDirectionLCD()
 }
 
 #pragma endregion
-
-#pragma endregion -Methods
 
 /// <summary>Called at the start of the program.</summary>
 void setup()
