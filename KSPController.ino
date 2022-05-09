@@ -274,16 +274,16 @@ bool ecLeds[20];
 
 // Communication \\
 
-// Speed lcd
-LiquidCrystal_I2C speedLCD(0x27, 16, 2);
-// Altitude lcd
-LiquidCrystal_I2C altitudeLCD(0x27, 16, 2);
-// Info lcd
-LiquidCrystal_I2C infoLCD(0x27, 16, 2);
 // Heading lcd
 LiquidCrystal_I2C headingLCD(0x27, 16, 2); // I2C address 0x27, 16 column and 2 rows
+// Speed lcd
+LiquidCrystal_I2C speedLCD(0x26, 16, 2);
+// Altitude lcd
+LiquidCrystal_I2C altitudeLCD(0x25, 16, 2);
+// Info lcd
+LiquidCrystal_I2C infoLCD(0x23, 16, 2);
 // Direction lcd
-LiquidCrystal_I2C directionLCD(0x27, 16, 2);
+LiquidCrystal_I2C directionLCD(0x22, 16, 2);
 
 // Stage & Abort
 bool stageLed;
@@ -426,7 +426,11 @@ void initIO()
     /////////////////
 
     // LCDs
-    //headingLCD.begin(); Needs args?
+    headingLCD.begin();
+    speedLCD.begin();
+    altitudeLCD.begin();
+    infoLCD.begin();
+    directionLCD.begin();
     // Shift register pins
     pinMode(SHIFT_OUT_A_LATCH_PIN, OUTPUT);
     pinMode(SHIFT_OUT_A_DATA_PIN, OUTPUT);
@@ -973,7 +977,6 @@ void setJoystickValues()
     int16_t transZ = smoothAndMapAxis(transZRaw);
     // Flip some values the right way
     rotX *= -1;
-    rotZ *= -1;
     // Set msg values
     rotMsg.setPitchRollYaw(rotY, rotX, rotZ);
     transMsg.setXYZ(transX, transZ, transY);
@@ -995,7 +998,7 @@ int16_t smoothAndMapAxis(int raw)
     // Map the smoothed data for simpit
     int16_t newMap = map(smooth, 0, 1023, INT16_MIN, INT16_MAX);
     // Return the smoothed mapped data
-    return raw;
+    return newMap;
 }
 
 /////////////////
@@ -1235,10 +1238,10 @@ void setAltitufeLCD()
         altLCDTopTxt += "     Land";
     }
     // Alt txt
-    altLCDBotTxt += "ALT ";
+    altLCDBotTxt += "ALT";
     if (altitude >= 1000000) alt = getKilos(altitude);
     // Alt 
-    altLCDBotTxt += formatNumber(alt, 11, true, false);
+    altLCDBotTxt += formatNumber(alt, 12, true, false);
     // Add distance unit
     if (altitude >= 1000000) altLCDBotTxt += "k";
     else altLCDBotTxt += "m";
@@ -1254,9 +1257,8 @@ void setHeadingLCD()
     // Clear the strings
     headingLCDTopTxt = "";
     headingLCDBotTxt = "";
-    // Calculate gap for soi name
-    // No SOI names are more than 7 char, which is good because that is the exact amount of room at max on the lcd.
-    headingLCDTopTxt += calculateGap(soi, 7);
+    // Gap?
+    headingLCDTopTxt += "        ";
     // Heading txt
     headingLCDTopTxt += " HDG+";
     headingLCDTopTxt += formatNumber(heading, 3, false, false);
@@ -1564,7 +1566,7 @@ void setup()
     // Wait for a connection to ksp
     while (!mySimpit.init());
     // Show that the controller has connected
-    mySimpit.printToKSP("Controller Connected!", PRINT_TO_SCREEN);
+    mySimpit.printToKSP("KSP Controller Connected!", PRINT_TO_SCREEN);
     // Register a method for receiving simpit messages from ksp
     mySimpit.inboundHandler(myCallbackHandler);
     // Register the simpit channels
