@@ -217,7 +217,7 @@ int throttleRaw;
 
 #pragma endregion
 
-#pragma region OutputPinsAndStates
+//*#pragma region OutputPinsAndStates
 
 // Shift out A pins (8 registers)
 const int SHIFT_OUT_A_DATA_PIN = 2;
@@ -1008,7 +1008,7 @@ int16_t smoothAndMapAxis(int raw)
 void setOutputValues()
 {
     // Shift register out A
-    shiftOutA[0] = (int)sfLeds[0]; // A:0
+    shiftOutA[0] = 0;//(int)sfLeds[0]; // A:0
     shiftOutA[1] = (int)sfLeds[1]; // A:1
     shiftOutA[2] = (int)sfLeds[2]; // A:2
     shiftOutA[3] = (int)sfLeds[3]; // A:3
@@ -1257,7 +1257,7 @@ void setHeadingLCD()
     // Clear the strings
     headingLCDTopTxt = "";
     headingLCDBotTxt = "";
-    // Gap?
+    // Gap? 
     headingLCDTopTxt += "        ";
     // Heading txt
     headingLCDTopTxt += " HDG+";
@@ -1442,7 +1442,7 @@ void sendShiftOut(int pins[], int dataPin, int latchPin, int clockPin)
     for (int pin = 0; pin < sizeof(pins); pin++)
     {
         // First 4 bytes
-        if (pin > 31 && pins[pin] == 1)
+        if (pin < 31 && pins[pin] == 1)
         {
             // Set the value for THIS pin/bit to 1
             bitSet(outputA, pin);
